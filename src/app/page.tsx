@@ -17,8 +17,8 @@ import { RoadmapTracker } from "@/components/dashboard/roadmap-tracker";
 import { InteractiveWorldMap } from "@/components/map";
 import { getWorldDashboardMetrics, INDICATORS } from "@/lib/world-bank";
 
-// Enable Next.js ISR (Incremental Static Regeneration) with 24h caching
-export const revalidate = 86400;
+// Use dynamic server rendering with 24h cached data fetches
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   // Fetch real World Bank demographic indicators on the server
