@@ -573,9 +573,9 @@ export async function fetchUzbekistanDynamicProfile(): Promise<{
       population: popRaw,
       formattedPopulation: formatIndicatorValue("SP.POP.TOTL", popRaw),
       year: popYear,
-      density: densityRaw,
-      growth: growthRaw,
-      urban: urbanRaw,
+      density: parseFloat(densityRaw.toFixed(1)),
+      growth: parseFloat(growthRaw.toFixed(2)),
+      urban: parseFloat(urbanRaw.toFixed(1)),
     };
   } catch (e) {
     return {

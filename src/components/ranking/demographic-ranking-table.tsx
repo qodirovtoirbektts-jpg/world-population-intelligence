@@ -130,9 +130,9 @@ export function DemographicRankingTable({ uzbekistanData }: DemographicRankingTa
       d.iso3,
       escapeCsvField(d.region),
       d.population,
-      d.density,
-      d.growth,
-      d.urban,
+      parseFloat(d.density.toFixed(1)),
+      parseFloat(d.growth.toFixed(2)),
+      parseFloat(d.urban.toFixed(1)),
     ]);
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
     downloadCsv(`world-demographic-rankings_${new Date().toISOString().split("T")[0]}.csv`, csvContent);
@@ -295,7 +295,7 @@ export function DemographicRankingTable({ uzbekistanData }: DemographicRankingTa
                         ) : (
                           <TrendingDown className="h-3 w-3" />
                         )}
-                        <span>{isGrowthPositive ? `+${row.growth}%` : `${row.growth}%`}</span>
+                        <span>{isGrowthPositive ? `+${row.growth.toFixed(2)}%` : `${row.growth.toFixed(2)}%`}</span>
                       </span>
                     </td>
 
