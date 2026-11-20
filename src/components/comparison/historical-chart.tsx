@@ -143,7 +143,7 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
   };
 
   return (
-    <Card id="historical-section" className="rounded-2xl border border-border/80 bg-card/80 backdrop-blur-xl shadow-sm overflow-hidden">
+    <Card id="historical-section" className="rounded-2xl border border-border/80 bg-card/80 backdrop-blur-xl shadow-sm overflow-hidden scroll-mt-20">
       <CardHeader className="border-b border-border/60 pb-4 p-5 sm:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>

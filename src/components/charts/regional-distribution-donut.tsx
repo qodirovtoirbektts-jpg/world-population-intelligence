@@ -1,25 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { PieChart as PieIcon, Globe2, Info } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { WorldBankRegionalItem, VERIFIED_REGIONAL_SNAPSHOT } from "@/lib/world-bank";
 
-// Authentic regional population distribution based on official World Bank WDI aggregates
-// (Summing ~8.15 Billion across major continental reporting regions)
-const REGIONAL_POPULATION_DATA = [
-  { region: "East Asia & Pacific", population: 2380000000, share: 29.2, color: "#3b82f6" },
-  { region: "South Asia", population: 1940000000, share: 23.8, color: "#10b981" },
-  { region: "Sub-Saharan Africa", population: 1240000000, share: 15.2, color: "#f59e0b" },
-  { region: "Europe & Central Asia", population: 935000000, share: 11.5, color: "#8b5cf6" },
-  { region: "Latin America & Caribbean", population: 665000000, share: 8.2, color: "#ec4899" },
-  { region: "Middle East & North Africa", population: 505000000, share: 6.2, color: "#06b6d4" },
-  { region: "North America", population: 385000000, share: 4.7, color: "#f43f5e" },
-];
+interface RegionalDistributionDonutProps {
+  data?: WorldBankRegionalItem[];
+}
 
-export function RegionalDistributionDonut() {
+export function RegionalDistributionDonut({ data }: RegionalDistributionDonutProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const regionalData = data && data.length > 0 ? data : VERIFIED_REGIONAL_SNAPSHOT;
+  const totalPopulation = regionalData.reduce((acc, curr) => acc + curr.population, 0);
 
   const formatPop = (val: number) => {
     if (val >= 1_000_000_000) return `${(val / 1_000_000_000).toFixed(2)}B`;
@@ -71,7 +66,7 @@ export function RegionalDistributionDonut() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={REGIONAL_POPULATION_DATA}
+                data={regionalData}
                 dataKey="population"
                 nameKey="region"
                 cx="50%"
@@ -82,7 +77,7 @@ export function RegionalDistributionDonut() {
                 onMouseEnter={(_, index) => setActiveIndex(index)}
                 onMouseLeave={() => setActiveIndex(null)}
               >
-                {REGIONAL_POPULATION_DATA.map((entry, index) => (
+                {regionalData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.color}
@@ -102,7 +97,7 @@ export function RegionalDistributionDonut() {
               World Total
             </span>
             <span className="text-lg font-extrabold text-foreground font-sans">
-              ~8.2B
+              {formatPop(totalPopulation)}
             </span>
             <span className="text-[10px] font-mono text-emerald-500 font-semibold">
               100% WLD
@@ -112,7 +107,7 @@ export function RegionalDistributionDonut() {
 
         {/* Legend Chips Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-2 border-t border-border/50 text-xs">
-          {REGIONAL_POPULATION_DATA.map((item, idx) => (
+          {regionalData.map((item, idx) => (
             <div
               key={item.region}
               className={`flex items-center justify-between p-1.5 rounded-lg transition-colors cursor-pointer ${

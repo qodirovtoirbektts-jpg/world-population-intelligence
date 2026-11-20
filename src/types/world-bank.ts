@@ -68,6 +68,7 @@ export interface IndicatorMetric {
   source: string;
   isAvailable: boolean;
   notes?: string;
+  trendText?: string;
 }
 
 export interface DashboardMetricsResult {

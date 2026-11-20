@@ -50,7 +50,9 @@ export async function GET(request: NextRequest) {
     // 1. Map Data across all countries
     if (isMap) {
       const validMetric: MapMetricType =
-        indicator === "EN.POP.DNST" || indicator === "SP.POP.GROW"
+        indicator === "EN.POP.DNST" ||
+        indicator === "SP.POP.GROW" ||
+        indicator === "SP.URB.TOTL.IN.ZS"
           ? indicator
           : "SP.POP.TOTL";
 

@@ -23,14 +23,23 @@ import { InteractiveWorldMap } from "@/components/map";
 import { RegionalDistributionDonut } from "@/components/charts/regional-distribution-donut";
 import { PopulationRankingBar } from "@/components/charts/population-ranking-bar";
 import { DemographicRankingTable } from "@/components/ranking/demographic-ranking-table";
-import { getWorldDashboardMetrics, INDICATORS } from "@/lib/world-bank";
+import {
+  getWorldDashboardMetrics,
+  fetchWorldBankRegionalData,
+  fetchUzbekistanDynamicProfile,
+  INDICATORS,
+} from "@/lib/world-bank";
 
 // Dynamic server-side rendering with 24h ISR caching
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // Fetch real World Bank demographic indicators on the server
-  const dashboardData = await getWorldDashboardMetrics();
+  // Fetch real World Bank demographic indicators, regional data & Uzbekistan profile on the server
+  const [dashboardData, regionalData, uzbekistanProfile] = await Promise.all([
+    getWorldDashboardMetrics(),
+    fetchWorldBankRegionalData(),
+    fetchUzbekistanDynamicProfile(),
+  ]);
   const { metrics, lastFetched, sourcePartner } = dashboardData;
 
   const totalPop = metrics["SP.POP.TOTL"];
@@ -144,7 +153,7 @@ export default async function HomePage() {
             source={totalPop.source}
             isAvailable={totalPop.isAvailable}
             notes={totalPop.notes}
-            trendText="+0.91% Annual"
+            trendText={totalPop.trendText || "+0.96% YoY"}
             progressPercent={82}
           />
 
@@ -158,7 +167,7 @@ export default async function HomePage() {
             source={popGrow.source}
             isAvailable={popGrow.isAvailable}
             notes={popGrow.notes}
-            trendText="Decelerating"
+            trendText={popGrow.trendText || "-0.01% YoY"}
             progressPercent={45}
           />
 
@@ -172,7 +181,7 @@ export default async function HomePage() {
             source={popDnst.source}
             isAvailable={popDnst.isAvailable}
             notes={popDnst.notes}
-            trendText="+1.2% / decade"
+            trendText={popDnst.trendText || "+0.57 / km² YoY"}
             progressPercent={62}
           />
 
@@ -186,7 +195,7 @@ export default async function HomePage() {
             source={urbShare.source}
             isAvailable={urbShare.isAvailable}
             notes={urbShare.notes}
-            trendText="Rising Majority"
+            trendText={urbShare.trendText || "+0.25% YoY"}
             progressPercent={58}
           />
         </div>
@@ -216,13 +225,16 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RegionalDistributionDonut />
-          <PopulationRankingBar />
+          <RegionalDistributionDonut data={regionalData} />
+          <PopulationRankingBar
+            uzbekistanPopulation={uzbekistanProfile.population}
+            uzbekistanYear={uzbekistanProfile.year}
+          />
         </div>
       </section>
 
       {/* 7. Demographic Intelligence League Table (Sortable, Searchable, CSV Export) */}
-      <DemographicRankingTable />
+      <DemographicRankingTable uzbekistanData={uzbekistanProfile} />
 
       {/* 8. Engineering Roadmap & Progression Tracker */}
       <RoadmapTracker />

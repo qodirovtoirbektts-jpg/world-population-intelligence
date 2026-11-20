@@ -69,6 +69,38 @@ export function ColorLegend({ metric }: ColorLegendProps) {
     );
   }
 
+  if (metric === "SP.URB.TOTL.IN.ZS") {
+    return (
+      <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground bg-card/60 border border-border/80 px-4 py-2.5 rounded-xl backdrop-blur-md">
+        <span className="font-semibold text-foreground">Urban Share (%):</span>
+        <div className="flex items-center gap-1.5">
+          <span className="h-3.5 w-6 rounded-sm bg-[#fef3c7]" />
+          <span>&lt; 30%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-3.5 w-6 rounded-sm bg-[#fde047]" />
+          <span>30% - 50%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-3.5 w-6 rounded-sm bg-[#f59e0b]" />
+          <span>50% - 70%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-3.5 w-6 rounded-sm bg-[#d97706]" />
+          <span>70% - 85%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-3.5 w-6 rounded-sm bg-[#78350f]" />
+          <span>85%+</span>
+        </div>
+        <div className="flex items-center gap-1.5 pl-2 border-l border-border/60">
+          <span className="h-3.5 w-4 rounded-sm bg-[#334155]" />
+          <span>No Data</span>
+        </div>
+      </div>
+    );
+  }
+
   // Annual Growth Rate
   return (
     <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground bg-card/60 border border-border/80 px-4 py-2.5 rounded-xl backdrop-blur-md">

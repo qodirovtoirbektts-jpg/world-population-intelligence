@@ -26,11 +26,28 @@ const TOP_NATIONS_POPULATION = [
   { name: "Brazil", iso3: "BRA", pop: 217600000, flag: "🇧🇷", isFeatured: false },
   { name: "Bangladesh", iso3: "BGD", pop: 174700000, flag: "🇧🇩", isFeatured: false },
   { name: "Russian Fed.", iso3: "RUS", pop: 144200000, flag: "🇷🇺", isFeatured: false },
-  { name: "Uzbekistan", iso3: "UZB", pop: 37150000, flag: "🇺🇿", isFeatured: true },
+  { name: "Uzbekistan", iso3: "UZB", pop: 36361859, flag: "🇺🇿", isFeatured: true },
 ];
 
-export function PopulationRankingBar() {
+interface PopulationRankingBarProps {
+  uzbekistanPopulation?: number;
+  uzbekistanYear?: string;
+}
+
+export function PopulationRankingBar({
+  uzbekistanPopulation,
+  uzbekistanYear = "2024",
+}: PopulationRankingBarProps) {
   const [activeIso, setActiveIso] = useState<string | null>(null);
+
+  const chartData = TOP_NATIONS_POPULATION.map((nation) => {
+    if (nation.iso3 === "UZB" && uzbekistanPopulation) {
+      return { ...nation, pop: uzbekistanPopulation };
+    }
+    return nation;
+  });
+
+  const uzbCurrent = chartData.find((n) => n.iso3 === "UZB")?.pop || 36361859;
 
   const formatPop = (val: number) => {
     if (val >= 1_000_000_000) return `${(val / 1_000_000_000).toFixed(2)}B`;
@@ -82,7 +99,7 @@ export function PopulationRankingBar() {
         <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={TOP_NATIONS_POPULATION}
+              data={chartData}
               layout="vertical"
               margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
             >
@@ -108,7 +125,7 @@ export function PopulationRankingBar() {
                 onMouseEnter={(data: any) => setActiveIso(data?.iso3 || data?.payload?.iso3)}
                 onMouseLeave={() => setActiveIso(null)}
               >
-                {TOP_NATIONS_POPULATION.map((entry) => (
+                {chartData.map((entry) => (
                   <Cell
                     key={entry.iso3}
                     fill={entry.isFeatured ? "#10b981" : activeIso === entry.iso3 ? "#6366f1" : "#3b82f6"}
@@ -129,10 +146,10 @@ export function PopulationRankingBar() {
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
-              Uzbekistan (37.15M)
+              Uzbekistan ({formatPop(uzbCurrent)} • {uzbekistanYear})
             </span>
           </div>
-          <span className="font-mono text-[10px]">Unit: Headcount</span>
+          <span className="font-mono text-[10px]">Source: World Bank WDI</span>
         </div>
       </CardContent>
     </Card>

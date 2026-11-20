@@ -52,21 +52,47 @@ const DEMOGRAPHIC_RANKING_DATA: RankingRow[] = [
   { rank: 17, name: "Turkey", iso3: "TUR", flag: "🇹🇷", region: "Europe & Central Asia", population: 85800000, density: 111.5, growth: 0.58, urban: 77.5 },
   { rank: 18, name: "United Kingdom", iso3: "GBR", flag: "🇬🇧", region: "Europe", population: 68300000, density: 282.0, growth: 0.78, urban: 84.6 },
   { rank: 19, name: "France", iso3: "FRA", flag: "🇫🇷", region: "Europe", population: 68100000, density: 124.5, growth: 0.28, urban: 81.8 },
-  { rank: 20, name: "Uzbekistan", iso3: "UZB", flag: "🇺🇿", region: "Central Asia", population: 37150000, density: 87.3, growth: 2.01, urban: 50.5 },
+  { rank: 20, name: "Uzbekistan", iso3: "UZB", flag: "🇺🇿", region: "Central Asia", population: 36361859, density: 82.9, growth: 1.97, urban: 51.0 },
 ];
 
 type SortField = "rank" | "population" | "density" | "growth" | "urban";
 
-export function DemographicRankingTable() {
+interface DemographicRankingTableProps {
+  uzbekistanData?: {
+    population: number;
+    density: number;
+    growth: number;
+    urban: number;
+    year: string;
+  };
+}
+
+export function DemographicRankingTable({ uzbekistanData }: DemographicRankingTableProps = {}) {
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("All");
   const [sortField, setSortField] = useState<SortField>("population");
   const [sortAsc, setSortAsc] = useState(false);
 
+  const baselineData = useMemo(() => {
+    if (!uzbekistanData) return DEMOGRAPHIC_RANKING_DATA;
+    return DEMOGRAPHIC_RANKING_DATA.map((item) => {
+      if (item.iso3 === "UZB") {
+        return {
+          ...item,
+          population: uzbekistanData.population,
+          density: uzbekistanData.density,
+          growth: uzbekistanData.growth,
+          urban: uzbekistanData.urban,
+        };
+      }
+      return item;
+    });
+  }, [uzbekistanData]);
+
   const regions = useMemo(() => {
-    const list = Array.from(new Set(DEMOGRAPHIC_RANKING_DATA.map((d) => d.region)));
+    const list = Array.from(new Set(baselineData.map((d) => d.region)));
     return ["All", ...list];
-  }, []);
+  }, [baselineData]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -78,7 +104,7 @@ export function DemographicRankingTable() {
   };
 
   const filteredData = useMemo(() => {
-    return DEMOGRAPHIC_RANKING_DATA.filter((row) => {
+    return baselineData.filter((row) => {
       const matchSearch =
         row.name.toLowerCase().includes(search.toLowerCase()) ||
         row.iso3.toLowerCase().includes(search.toLowerCase());
@@ -89,7 +115,7 @@ export function DemographicRankingTable() {
       const valB = b[sortField];
       return sortAsc ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
     });
-  }, [search, selectedRegion, sortField, sortAsc]);
+  }, [baselineData, search, selectedRegion, sortField, sortAsc]);
 
   const formatPop = (num: number) => {
     if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2)}B`;
@@ -113,7 +139,7 @@ export function DemographicRankingTable() {
   };
 
   return (
-    <section id="ranking-section" className="space-y-4">
+    <section id="ranking-section" className="space-y-4 scroll-mt-20">
       <Card className="rounded-2xl border border-border/80 bg-card/80 backdrop-blur-xl shadow-sm overflow-hidden">
         <CardHeader className="p-5 sm:p-6 pb-4 border-b border-border/60">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

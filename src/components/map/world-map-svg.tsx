@@ -43,6 +43,14 @@ function getFillColor(metric: MapMetricType, val: number | null | undefined): st
     return "#042f2e";
   }
 
+  if (metric === "SP.URB.TOTL.IN.ZS") {
+    if (val < 30) return "#fef3c7";
+    if (val < 50) return "#fde047";
+    if (val < 70) return "#f59e0b";
+    if (val < 85) return "#d97706";
+    return "#78350f";
+  }
+
   // Growth Rate
   if (val < 0) return "#ef4444";
   if (val < 1) return "#fed7aa";
@@ -59,6 +67,8 @@ function getMetricTitle(metric: MapMetricType): string {
       return "Density";
     case "SP.POP.GROW":
       return "Growth Rate";
+    case "SP.URB.TOTL.IN.ZS":
+      return "Urban Share";
   }
 }
 
