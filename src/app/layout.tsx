@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,11 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-background font-sans antialiased text-foreground flex flex-col justify-between">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="min-h-screen bg-background font-sans antialiased text-foreground">
+        <ThemeProvider defaultTheme="dark">
+          <DashboardShell>{children}</DashboardShell>
+        </ThemeProvider>
       </body>
     </html>
   );

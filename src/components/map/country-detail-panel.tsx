@@ -128,6 +128,20 @@ export function CountryDetailPanel({
         </div>
       </div>
 
+      {/* Quick Comparison Action */}
+      <div className="pt-1">
+        <a href="#compare-section" className="block">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-between text-xs h-9 rounded-xl border-indigo-500/30 hover:bg-indigo-500/10 hover:text-indigo-400 group"
+          >
+            <span>Benchmark in Comparison Engine</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Button>
+        </a>
+      </div>
+
       {/* Verification footer */}
       <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1 text-emerald-400 font-medium">

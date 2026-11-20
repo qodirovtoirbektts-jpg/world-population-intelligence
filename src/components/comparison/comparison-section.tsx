@@ -21,7 +21,7 @@ export function ComparisonSection() {
   const { profiles, historical } = comparisonData;
 
   return (
-    <section id="compare-section" className="space-y-6">
+    <section id="compare-section" className="space-y-6 scroll-mt-20">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>

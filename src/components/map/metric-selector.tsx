@@ -1,4 +1,4 @@
-import { Users, Compass, TrendingUp } from "lucide-react";
+import { Users, Compass, TrendingUp, Building2 } from "lucide-react";
 import { MapMetricType } from "@/types/map";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,13 @@ const METRIC_OPTIONS: Array<{
     code: "SP.POP.GROW",
     icon: TrendingUp,
     color: "from-amber-500 to-rose-600",
+  },
+  {
+    id: "SP.URB.TOTL.IN.ZS",
+    label: "Urban Population Share",
+    code: "SP.URB.TOTL.IN.ZS",
+    icon: Building2,
+    color: "from-amber-500 to-amber-700",
   },
 ];
 

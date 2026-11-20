@@ -1,6 +1,6 @@
 import { DemographicIndicatorCode } from "./world-bank";
 
-export type MapMetricType = "SP.POP.TOTL" | "EN.POP.DNST" | "SP.POP.GROW";
+export type MapMetricType = "SP.POP.TOTL" | "EN.POP.DNST" | "SP.POP.GROW" | "SP.URB.TOTL.IN.ZS";
 
 export interface CountryMapData {
   iso3: string;

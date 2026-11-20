@@ -60,7 +60,7 @@ const stages: RoadmapStage[] = [
 
 export function RoadmapTracker() {
   return (
-    <div id="roadmap-section" className="space-y-6">
+    <div id="roadmap-section" className="space-y-6 scroll-mt-20">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
@@ -71,8 +71,8 @@ export function RoadmapTracker() {
             Strict step-by-step implementation plan for WORLD POPULATION INTELLIGENCE
           </p>
         </div>
-        <Badge variant="outline" className="w-fit text-xs px-3 py-1 font-mono">
-          Stage 3 of 5 Completed
+        <Badge variant="outline" className="w-fit text-xs px-3 py-1 font-mono text-emerald-400 border-emerald-500/30 bg-emerald-500/10">
+          Stages 1–5 Completed • Phase 9 Redesign & Audit
         </Badge>
       </div>
 
