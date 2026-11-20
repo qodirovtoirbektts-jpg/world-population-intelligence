@@ -46,11 +46,11 @@ export function AppSidebar({
     },
     {
       id: "map-section",
-      label: "Choropleth World Map",
+      label: "3D Globe & World Map",
       href: "#map-section",
-      icon: Map,
-      badge: "200+",
-      badgeColor: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+      icon: Globe,
+      badge: "3D Live",
+      badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
     },
     {
       id: "compare-section",

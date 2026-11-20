@@ -8,15 +8,17 @@ import { MapTooltip } from "./map-tooltip";
 import { CountryDetailPanel } from "./country-detail-panel";
 import { UnmatchedStatus } from "./unmatched-status";
 import { WorldMapSvg } from "./world-map-svg";
+import { InteractiveGlobe } from "@/components/globe";
 import { MapSkeleton } from "./map-skeleton";
 import { MapMetricType, CountryMapData, MapTooltipState, SelectedCountryProfile } from "@/types/map";
-import { MapPin, AlertCircle, RefreshCw, Layers } from "lucide-react";
+import { MapPin, AlertCircle, RefreshCw, Layers, Globe, Map as MapIcon, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExportDropdown } from "@/components/export";
 
 export function MapSection() {
   const [metric, setMetric] = useState<MapMetricType>("SP.POP.TOTL");
+  const [viewMode, setViewMode] = useState<"globe" | "map">("globe");
   const [datasetsByMetric, setDatasetsByMetric] = useState<
     Partial<Record<MapMetricType, Record<string, CountryMapData>>>
   >({});
@@ -123,23 +125,49 @@ export function MapSection() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-              <Layers className="h-4 w-4" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
+              <Globe className="h-4 w-4" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Interactive Choropleth World Map
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <span>Planetary Intelligence Centerpiece</span>
             </h2>
-            <Badge variant="success" className="text-[10px] py-0.5 px-2">
-              Stage 3 Live
+            <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10 text-[10px] py-0.5 px-2 font-mono">
+              Lepus 3D Engine
             </Badge>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            200+ countries rendered via TopoJSON 110m vectors with live World Bank demographic metrics.
+            Interactive 3D Earth Globe and Equal-Earth vector projections streaming authentic World Bank development indicators.
           </p>
         </div>
 
-        {/* Quick Country Focus & Audit Pill & CSV Export */}
+        {/* View Mode Toggle & Quick Country Focus & CSV Export */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* Dual Projection Toggle (3D Globe vs 2D Flat Map) */}
+          <div className="flex items-center p-1 rounded-xl bg-secondary/50 border border-border/70 text-xs font-mono shadow-sm">
+            <button
+              onClick={() => setViewMode("globe")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                viewMode === "globe"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span>3D Globe</span>
+            </button>
+            <button
+              onClick={() => setViewMode("map")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                viewMode === "map"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <MapIcon className="h-3.5 w-3.5" />
+              <span>2D Map</span>
+            </button>
+          </div>
+
           <ExportDropdown
             mapDataset={datasetsByMetric[metric] || {}}
             activeMapMetric={metric}
@@ -150,10 +178,10 @@ export function MapSection() {
             variant="outline"
             size="sm"
             onClick={handleFocusUzbekistan}
-            className="gap-1.5 text-xs border-blue-500/30 text-blue-300 hover:bg-blue-500/10"
+            className="gap-1.5 text-xs border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
           >
-            <MapPin className="h-3.5 w-3.5 text-blue-400" />
-            <span>Focus Uzbekistan (UZB)</span>
+            <MapPin className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Focus Uzbekistan</span>
           </Button>
 
           <UnmatchedStatus />
@@ -167,18 +195,20 @@ export function MapSection() {
         isLoading={isLoading}
       />
 
-      {/* Main Map Canvas and Detail Panel */}
+      {/* Main Map / Globe Canvas and Detail Panel */}
       <div className="relative flex flex-col lg:flex-row items-start gap-6 rounded-3xl border border-border/80 bg-card/40 p-4 sm:p-6 shadow-2xl backdrop-blur-xl overflow-hidden">
-        {/* Map Viewport Area */}
-        <div className="relative flex-1 w-full min-h-[460px] sm:min-h-[560px] rounded-2xl border border-border/60 bg-background/50 overflow-hidden flex flex-col justify-between">
-          {/* Zoom & Pan Controls (Top-right) */}
-          <div className="absolute top-4 right-4 z-20">
-            <MapControls
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-              onReset={handleReset}
-            />
-          </div>
+        {/* Visual Viewport Area */}
+        <div className="relative flex-1 w-full min-h-[480px] sm:min-h-[580px] rounded-2xl border border-border/60 bg-background/50 overflow-hidden flex flex-col justify-between">
+          {/* Zoom & Pan Controls (Only active for 2D Map mode) */}
+          {viewMode === "map" && (
+            <div className="absolute top-4 right-4 z-20">
+              <MapControls
+                onZoomIn={handleZoomIn}
+                onZoomOut={handleZoomOut}
+                onReset={handleReset}
+              />
+            </div>
+          )}
 
           {/* Error notice if API fails */}
           {error && (
@@ -196,9 +226,18 @@ export function MapSection() {
             </div>
           )}
 
-          {/* Interactive SVG World Map */}
+          {/* Render 3D Earth Globe OR 2D Choropleth Map */}
           {isLoading && !datasetsByMetric[metric] ? (
             <MapSkeleton />
+          ) : viewMode === "globe" ? (
+            <InteractiveGlobe
+              metric={metric}
+              dataset={currentDataset}
+              selectedIso3={selectedIso3}
+              onSelectCountry={(iso3, name) => loadCountryProfile(iso3, name)}
+              onHoverCountry={(tt) => setTooltip(tt)}
+              onFocusUzbekistan={handleFocusUzbekistan}
+            />
           ) : (
             <WorldMapSvg
               metric={metric}
