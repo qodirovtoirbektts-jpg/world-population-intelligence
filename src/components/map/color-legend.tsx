@@ -1,10 +1,15 @@
+"use client";
+
 import { MapMetricType } from "@/types/map";
+import { useTranslation } from "@/components/language";
 
 interface ColorLegendProps {
   metric: MapMetricType;
 }
 
 export function ColorLegend({ metric }: ColorLegendProps) {
+  const { t } = useTranslation();
+
   if (metric === "SP.POP.TOTL") {
     return (
       <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground bg-card/60 border border-border/80 px-4 py-2.5 rounded-xl backdrop-blur-md">
@@ -31,7 +36,7 @@ export function ColorLegend({ metric }: ColorLegendProps) {
         </div>
         <div className="flex items-center gap-1.5 pl-2 border-l border-border/60">
           <span className="h-3.5 w-4 rounded-sm bg-[#334155]" />
-          <span>No Data</span>
+          <span>{t.centerpiece.legendNoData}</span>
         </div>
       </div>
     );
@@ -63,7 +68,7 @@ export function ColorLegend({ metric }: ColorLegendProps) {
         </div>
         <div className="flex items-center gap-1.5 pl-2 border-l border-border/60">
           <span className="h-3.5 w-4 rounded-sm bg-[#334155]" />
-          <span>No Data</span>
+          <span>{t.centerpiece.legendNoData}</span>
         </div>
       </div>
     );
@@ -95,22 +100,22 @@ export function ColorLegend({ metric }: ColorLegendProps) {
         </div>
         <div className="flex items-center gap-1.5 pl-2 border-l border-border/60">
           <span className="h-3.5 w-4 rounded-sm bg-[#334155]" />
-          <span>No Data</span>
+          <span>{t.centerpiece.legendNoData}</span>
         </div>
       </div>
     );
   }
 
-  // Annual Growth Rate
+  // Growth Rate
   return (
     <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground bg-card/60 border border-border/80 px-4 py-2.5 rounded-xl backdrop-blur-md">
-      <span className="font-semibold text-foreground">Annual Growth:</span>
+      <span className="font-semibold text-foreground">Growth Rate (%):</span>
       <div className="flex items-center gap-1.5">
-        <span className="h-3.5 w-6 rounded-sm bg-[#ef4444]" />
-        <span>&lt; 0% (Decline)</span>
+        <span className="h-3.5 w-6 rounded-sm bg-[#f43f5e]" />
+        <span>&lt; 0%</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="h-3.5 w-6 rounded-sm bg-[#fed7aa]" />
+        <span className="h-3.5 w-6 rounded-sm bg-[#fdba74]" />
         <span>0% - 1%</span>
       </div>
       <div className="flex items-center gap-1.5">
@@ -122,12 +127,12 @@ export function ColorLegend({ metric }: ColorLegendProps) {
         <span>2% - 3%</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="h-3.5 w-6 rounded-sm bg-[#14532d]" />
+        <span className="h-3.5 w-6 rounded-sm bg-[#15803d]" />
         <span>3%+</span>
       </div>
       <div className="flex items-center gap-1.5 pl-2 border-l border-border/60">
         <span className="h-3.5 w-4 rounded-sm bg-[#334155]" />
-        <span>No Data</span>
+        <span>{t.centerpiece.legendNoData}</span>
       </div>
     </div>
   );

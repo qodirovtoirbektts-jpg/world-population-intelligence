@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, X, Plus, Sparkles, AlertCircle, Check } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Search, X, Sparkles, AlertCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  ALL_COUNTRIES,
   searchCountries,
   COMPARISON_PALETTE,
   findCountryByIso3,
 } from "@/lib/country-registry";
-import { CountryListItem } from "@/types/comparison";
+import { useTranslation } from "@/components/language";
 
 interface CountrySelectorProps {
   selectedCodes: string[];
@@ -18,6 +16,7 @@ interface CountrySelectorProps {
 }
 
 export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProps) {
+  const { t, language } = useTranslation();
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -54,6 +53,14 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
   const isMaxReached = selectedCodes.length >= 5;
   const isMinReached = selectedCodes.length <= 2;
 
+  const getCountryDisplayName = (iso3: string, defaultName: string) => {
+    if (iso3 === "UZB") {
+      if (language === "ru") return "Узбекистан";
+      if (language === "uz") return "Oʻzbekiston";
+    }
+    return defaultName;
+  };
+
   return (
     <div className="space-y-4">
       {/* Search Bar & Action Controls */}
@@ -61,7 +68,7 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
         {/* Search Input Container */}
         <div ref={dropdownRef} className="relative flex-1">
           <label htmlFor="country-search-input" className="sr-only">
-            Search country by name or ISO-3 code for demographic comparison
+            {t.comparison.searchPlaceholder}
           </label>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
@@ -73,7 +80,7 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
               aria-autocomplete="list"
               aria-expanded={isOpen && !isMaxReached}
               aria-controls="country-search-listbox"
-              aria-label="Search country by name or ISO-3 code"
+              aria-label={t.comparison.searchPlaceholder}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -85,8 +92,8 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
               }}
               placeholder={
                 isMaxReached
-                  ? "Maximum 5 countries selected (remove one to add another)"
-                  : "Search country by name or ISO-3 (e.g. Uzbekistan, USA, CHN)..."
+                  ? t.comparison.maxReached
+                  : t.comparison.searchPlaceholder
               }
               disabled={isMaxReached}
               className="w-full h-11 pl-10 pr-4 rounded-xl border border-border/80 bg-background/60 backdrop-blur-md text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -102,15 +109,16 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
               className="absolute z-50 left-0 right-0 mt-2 max-h-72 overflow-y-auto rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl p-1.5 space-y-1"
             >
               <div className="px-2.5 py-1.5 text-[11px] font-mono uppercase tracking-wider text-muted-foreground" aria-hidden="true">
-                Select Country ({filteredCountries.length} available)
+                {t.comparison.selectPrompt} ({filteredCountries.length})
               </div>
               {filteredCountries.length === 0 ? (
                 <div className="py-6 text-center text-xs text-muted-foreground" role="status">
-                  No matching countries found for &quot;{query}&quot;
+                  {t.leagueTable.noResults}
                 </div>
               ) : (
                 filteredCountries.map((country) => {
                   const isAlreadySelected = selectedCodes.includes(country.iso3);
+                  const displayName = getCountryDisplayName(country.iso3, country.name);
                   return (
                     <button
                       key={country.iso3}
@@ -128,7 +136,7 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
                       <div className="flex items-center gap-2.5">
                         <span className="text-base" aria-hidden="true">{country.flag}</span>
                         <div>
-                          <div className="font-medium text-foreground">{country.name}</div>
+                          <div className="font-medium text-foreground">{displayName}</div>
                           <div className="text-[11px] text-muted-foreground">{country.region}</div>
                         </div>
                       </div>
@@ -155,7 +163,7 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
             className="border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/10 text-emerald-400 gap-1.5 shrink-0"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            <span>+ Add Uzbekistan</span>
+            <span>{t.comparison.quickAddUzb}</span>
           </Button>
         )}
       </div>
@@ -163,12 +171,13 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
       {/* Selected Countries Badges Bar */}
       <div className="flex flex-wrap items-center gap-2.5 pt-1">
         <span className="text-xs font-medium text-muted-foreground">
-          Comparing ({selectedCodes.length}/5):
+          {t.comparison.selectedLabel} ({selectedCodes.length}/5):
         </span>
 
         {selectedCodes.map((iso3, index) => {
           const country = findCountryByIso3(iso3);
           const palette = COMPARISON_PALETTE[index % COMPARISON_PALETTE.length];
+          const displayName = getCountryDisplayName(iso3, country?.name || iso3);
 
           return (
             <div
@@ -182,7 +191,7 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
               />
               <span className="text-sm">{country?.flag}</span>
               <span className="font-semibold text-foreground">
-                {country?.name || iso3}
+                {displayName}
               </span>
               <span className="font-mono text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-secondary/60">
                 {iso3}
@@ -195,13 +204,13 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
                 disabled={isMinReached}
                 aria-label={
                   isMinReached
-                    ? `Cannot remove ${country?.name || iso3}. Minimum 2 countries required`
-                    : `Remove ${country?.name || iso3} from comparison`
+                    ? `Cannot remove ${displayName}. Minimum 2 countries required`
+                    : `Remove ${displayName} from comparison`
                 }
                 title={
                   isMinReached
-                    ? "Minimum 2 countries required for comparison"
-                    : `Remove ${country?.name || iso3}`
+                    ? "Minimum 2 countries required"
+                    : `Remove ${displayName}`
                 }
                 className={`p-1 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
                   isMinReached ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
@@ -219,7 +228,6 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
           <button
             type="button"
             onClick={() => onChange(["UZB", "KAZ"])}
-            aria-label="Load preset: Uzbekistan vs Kazakhstan"
             className="px-2 py-1 rounded-lg border border-border hover:border-blue-500/40 bg-secondary/30 hover:bg-secondary/60 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
           >
             UZB vs KAZ
@@ -227,7 +235,6 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
           <button
             type="button"
             onClick={() => onChange(["UZB", "USA", "CHN"])}
-            aria-label="Load preset: Uzbekistan, United States and China"
             className="px-2 py-1 rounded-lg border border-border hover:border-blue-500/40 bg-secondary/30 hover:bg-secondary/60 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
           >
             UZB • USA • CHN
@@ -235,10 +242,9 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
           <button
             type="button"
             onClick={() => onChange(["IND", "CHN", "USA", "BRA"])}
-            aria-label="Load preset: Top Population Giants"
             className="px-2 py-1 rounded-lg border border-border hover:border-blue-500/40 bg-secondary/30 hover:bg-secondary/60 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
           >
-            Top Population Giants
+            Top Giants
           </button>
         </div>
       </div>
@@ -253,7 +259,7 @@ export function CountrySelector({ selectedCodes, onChange }: CountrySelectorProp
       {isMaxReached && (
         <div className="flex items-center gap-1.5 text-[11px] text-amber-400/90">
           <AlertCircle className="h-3.5 w-3.5" />
-          <span>Maximum 5 countries selected. Remove a country tag to select another.</span>
+          <span>{t.comparison.maxReached}</span>
         </div>
       )}
     </div>

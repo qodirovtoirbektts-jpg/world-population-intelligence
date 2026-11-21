@@ -1,6 +1,9 @@
+"use client";
+
 import { Users, Compass, TrendingUp, Building2 } from "lucide-react";
 import { MapMetricType } from "@/types/map";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/components/language";
 
 interface MetricSelectorProps {
   currentMetric: MapMetricType;
@@ -8,51 +11,53 @@ interface MetricSelectorProps {
   isLoading?: boolean;
 }
 
-const METRIC_OPTIONS: Array<{
-  id: MapMetricType;
-  label: string;
-  code: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-}> = [
-  {
-    id: "SP.POP.TOTL",
-    label: "Total Population",
-    code: "SP.POP.TOTL",
-    icon: Users,
-    color: "from-blue-500 to-indigo-600",
-  },
-  {
-    id: "EN.POP.DNST",
-    label: "Population Density",
-    code: "EN.POP.DNST",
-    icon: Compass,
-    color: "from-teal-500 to-emerald-600",
-  },
-  {
-    id: "SP.POP.GROW",
-    label: "Annual Growth Rate",
-    code: "SP.POP.GROW",
-    icon: TrendingUp,
-    color: "from-amber-500 to-rose-600",
-  },
-  {
-    id: "SP.URB.TOTL.IN.ZS",
-    label: "Urban Population Share",
-    code: "SP.URB.TOTL.IN.ZS",
-    icon: Building2,
-    color: "from-amber-500 to-amber-700",
-  },
-];
-
 export function MetricSelector({
   currentMetric,
   onSelect,
   isLoading = false,
 }: MetricSelectorProps) {
+  const { t } = useTranslation();
+
+  const metricOptions: Array<{
+    id: MapMetricType;
+    label: string;
+    code: string;
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+  }> = [
+    {
+      id: "SP.POP.TOTL",
+      label: t.centerpiece.tabPop,
+      code: "SP.POP.TOTL",
+      icon: Users,
+      color: "from-blue-500 to-indigo-600",
+    },
+    {
+      id: "EN.POP.DNST",
+      label: t.centerpiece.tabDnst,
+      code: "EN.POP.DNST",
+      icon: Compass,
+      color: "from-teal-500 to-emerald-600",
+    },
+    {
+      id: "SP.POP.GROW",
+      label: t.centerpiece.tabGrow,
+      code: "SP.POP.GROW",
+      icon: TrendingUp,
+      color: "from-amber-500 to-rose-600",
+    },
+    {
+      id: "SP.URB.TOTL.IN.ZS",
+      label: t.centerpiece.tabUrb,
+      code: "SP.URB.TOTL.IN.ZS",
+      icon: Building2,
+      color: "from-amber-500 to-amber-700",
+    },
+  ];
+
   return (
     <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-secondary/40 border border-border/80 backdrop-blur-md" role="tablist" aria-label="Map Indicator Switcher">
-      {METRIC_OPTIONS.map((opt) => {
+      {metricOptions.map((opt) => {
         const Icon = opt.icon;
         const isSelected = currentMetric === opt.id;
 

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Database, CheckCircle2, AlertTriangle, TrendingUp, Sparkles, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/components/language";
 
 interface StatCardProps {
   title: string;
@@ -33,15 +34,17 @@ export function StatCard({
   progressPercent,
   className,
 }: StatCardProps) {
+  const { t } = useTranslation();
+
   // Derive default Lepus trend badge if not provided
   const derivedTrend = trendText || (
     indicatorCode === "SP.POP.GROW"
-      ? "Annual exponential"
+      ? t.kpi.popGrow.trendText
       : indicatorCode === "SP.URB.TOTL.IN.ZS"
-      ? "Urbanization trend"
+      ? t.kpi.popUrb.trendText
       : indicatorCode === "EN.POP.DNST"
-      ? "Global land area"
-      : "World Aggregate"
+      ? t.kpi.popDnst.trendText
+      : t.kpi.popTotal.trendText
   );
 
   return (
@@ -58,7 +61,7 @@ export function StatCard({
         <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 sm:px-5">
           <div className="flex flex-col gap-0.5">
             <span className="text-[11px] font-mono tracking-wider uppercase text-muted-foreground font-medium">
-              Indicator
+              {indicatorCode}
             </span>
             <CardTitle className="text-xs sm:text-sm font-semibold text-foreground line-clamp-1">
               {title}
@@ -80,7 +83,7 @@ export function StatCard({
               ) : (
                 <div className="flex items-center gap-1.5 text-amber-500 text-sm font-medium">
                   <AlertTriangle className="h-4 w-4" />
-                  <span>Data pending</span>
+                  <span>{t.common.dataPending}</span>
                 </div>
               )}
 
@@ -121,9 +124,9 @@ export function StatCard({
       <div className="px-4 sm:px-5 py-3 border-t border-border/60 bg-muted/20 flex items-center justify-between text-[11px] text-muted-foreground rounded-b-2xl">
         <div className="flex items-center gap-1.5">
           <Calendar className="h-3 w-3 text-primary" />
-          <span>Year:</span>
+          <span>{t.common.referenceYear}:</span>
           <span className="font-semibold text-foreground font-mono">
-            {year || "N/A"}
+            {year || t.common.na}
           </span>
         </div>
 

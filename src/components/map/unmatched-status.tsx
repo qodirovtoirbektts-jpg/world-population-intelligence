@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { CheckCircle2, Info, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/components/language";
 
 export function UnmatchedStatus() {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -17,7 +18,7 @@ export function UnmatchedStatus() {
       >
         <span className="h-2 w-2 rounded-full bg-emerald-400 group-hover:animate-ping" />
         <span className="font-mono text-[11px] text-emerald-400">
-          ISO Match: 100% (177/177 Geometries)
+          {t.centerpiece.mapAuditCoverage}
         </span>
         <Info className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
       </button>
@@ -29,7 +30,7 @@ export function UnmatchedStatus() {
               <div>
                 <h4 className="text-base font-bold text-foreground flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  Geographic Entity Matching Audit
+                  {t.centerpiece.mapAuditZeroUnmatched}
                 </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Transparency report per Senior Architecture guidelines
@@ -76,7 +77,7 @@ export function UnmatchedStatus() {
 
             <div className="pt-2 border-t border-border/40 flex justify-end">
               <Button size="sm" onClick={() => setIsOpen(false)}>
-                Close Audit
+                {t.common.close}
               </Button>
             </div>
           </div>

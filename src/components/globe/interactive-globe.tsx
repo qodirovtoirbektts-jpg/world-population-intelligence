@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/components/language";
 
 const GEO_URL = "/data/world-110m.json";
 
@@ -91,6 +92,7 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
   onSelectCountry,
   onHoverCountry,
 }: InteractiveGlobeProps) {
+  const { t } = useTranslation();
   // Rotation: [longitude (yaw), latitude (pitch), roll]
   // Default centered roughly on Central Asia / Europe / Middle East
   const [rotation, setRotation] = useState<[number, number, number]>([-64.5, -35, 0]);
@@ -202,13 +204,13 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
           className="bg-slate-950/80 backdrop-blur-md border-cyan-500/40 text-cyan-400 font-mono text-[11px] px-3 py-1 shadow-lg flex items-center gap-1.5"
         >
           <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
-          Interactive 3D Earth Globe
+          {t.centerpiece.globeBadge3d}
         </Badge>
         <Badge
           variant="outline"
           className="bg-slate-950/70 backdrop-blur-md border-border/60 text-muted-foreground font-mono text-[10px] px-2.5 py-0.5 hidden sm:inline-flex"
         >
-          Orthographic Vector Projection
+          {t.centerpiece.globeBadgeProjection}
         </Badge>
       </div>
 
@@ -223,17 +225,17 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
               ? "text-cyan-400 bg-cyan-950/50 border border-cyan-500/30"
               : "text-muted-foreground hover:text-foreground"
           }`}
-          title={isAutoSpinning ? "Pause Auto-Rotation" : "Resume Auto-Rotation"}
+          title={isAutoSpinning ? t.centerpiece.globeSpinning : t.centerpiece.globeAutoSpin}
         >
           {isAutoSpinning ? (
             <>
               <Pause className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Spinning</span>
+              <span className="hidden sm:inline">{t.centerpiece.globeSpinning}</span>
             </>
           ) : (
             <>
               <Play className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Auto-Spin</span>
+              <span className="hidden sm:inline">{t.centerpiece.globeAutoSpin}</span>
             </>
           )}
         </Button>
@@ -245,7 +247,7 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
           size="icon"
           onClick={zoomIn}
           className="h-8 w-8 rounded-xl text-muted-foreground hover:text-cyan-400 hover:bg-slate-900"
-          title="Zoom In"
+          title={t.centerpiece.globeZoomIn}
         >
           <ZoomIn className="h-3.5 w-3.5" />
         </Button>
@@ -255,7 +257,7 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
           size="icon"
           onClick={zoomOut}
           className="h-8 w-8 rounded-xl text-muted-foreground hover:text-cyan-400 hover:bg-slate-900"
-          title="Zoom Out"
+          title={t.centerpiece.globeZoomOut}
         >
           <ZoomOut className="h-3.5 w-3.5" />
         </Button>
@@ -265,7 +267,7 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
           size="icon"
           onClick={resetView}
           className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-slate-900"
-          title="Reset Camera View"
+          title={t.centerpiece.globeReset}
         >
           <RotateCcw className="h-3.5 w-3.5" />
         </Button>
@@ -279,14 +281,14 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
           className="h-8 px-3 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-900/30 gap-1.5"
         >
           <MapPin className="h-3.5 w-3.5" />
-          <span>Focus Uzbekistan</span>
+          <span>{t.centerpiece.focusUzbekistan}</span>
         </Button>
       </div>
 
       {/* 4. Drag Instructions Hint */}
       <div className="absolute top-4 right-4 z-20 pointer-events-none hidden md:flex items-center gap-2 font-mono text-[11px] text-muted-foreground/80 bg-slate-950/70 backdrop-blur-md px-3 py-1 rounded-xl border border-slate-800/80">
         <Compass className="h-3.5 w-3.5 text-cyan-400 animate-spin duration-3000" />
-        <span>Drag to rotate sphere in 3D</span>
+        <span>{t.centerpiece.globeHintDrag}</span>
       </div>
 
       {/* 5. Central 3D Globe Vector Map */}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { LanguageProvider } from "@/components/language";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import "./globals.css";
 
@@ -27,7 +28,9 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased text-foreground">
         <ThemeProvider defaultTheme="dark">
-          <DashboardShell>{children}</DashboardShell>
+          <LanguageProvider defaultLang="en">
+            <DashboardShell>{children}</DashboardShell>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

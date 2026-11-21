@@ -1,58 +1,61 @@
 "use client";
 
-import { Users, TrendingUp, Compass, Building2, CheckCircle2 } from "lucide-react";
+import { Users, TrendingUp, Compass, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CountryComparisonProfile } from "@/types/comparison";
 import { DemographicIndicatorCode } from "@/types/world-bank";
+import { useTranslation } from "@/components/language";
 
 interface MetricComparisonCardsProps {
   profiles: CountryComparisonProfile[];
 }
 
-interface MetricConfig {
-  code: DemographicIndicatorCode;
-  title: string;
-  icon: React.ReactNode;
-  unit: string;
-  description: string;
-}
-
-const METRICS_CONFIG: MetricConfig[] = [
-  {
-    code: "SP.POP.TOTL",
-    title: "Total Population",
-    icon: <Users className="h-4 w-4 text-blue-400" />,
-    unit: "people",
-    description: "Official midyear headcount",
-  },
-  {
-    code: "EN.POP.DNST",
-    title: "Population Density",
-    icon: <Compass className="h-4 w-4 text-indigo-400" />,
-    unit: "per km²",
-    description: "Inhabitants per square kilometer",
-  },
-  {
-    code: "SP.POP.GROW",
-    title: "Annual Population Growth",
-    icon: <TrendingUp className="h-4 w-4 text-emerald-400" />,
-    unit: "%",
-    description: "Year-over-year demographic expansion rate",
-  },
-  {
-    code: "SP.URB.TOTL.IN.ZS",
-    title: "Urban Population Share",
-    icon: <Building2 className="h-4 w-4 text-amber-400" />,
-    unit: "%",
-    description: "Proportion of citizens residing in cities",
-  },
-];
-
 export function MetricComparisonCards({ profiles }: MetricComparisonCardsProps) {
+  const { t, language } = useTranslation();
+
+  const metricsConfig = [
+    {
+      code: "SP.POP.TOTL" as DemographicIndicatorCode,
+      title: t.kpi.popTotal.title,
+      icon: <Users className="h-4 w-4 text-blue-400" />,
+      unit: "people",
+      description: t.kpi.popTotal.description,
+    },
+    {
+      code: "EN.POP.DNST" as DemographicIndicatorCode,
+      title: t.kpi.popDnst.title,
+      icon: <Compass className="h-4 w-4 text-indigo-400" />,
+      unit: "per km²",
+      description: t.kpi.popDnst.description,
+    },
+    {
+      code: "SP.POP.GROW" as DemographicIndicatorCode,
+      title: t.kpi.popGrow.title,
+      icon: <TrendingUp className="h-4 w-4 text-emerald-400" />,
+      unit: "%",
+      description: t.kpi.popGrow.description,
+    },
+    {
+      code: "SP.URB.TOTL.IN.ZS" as DemographicIndicatorCode,
+      title: t.kpi.popUrb.title,
+      icon: <Building2 className="h-4 w-4 text-amber-400" />,
+      unit: "%",
+      description: t.kpi.popUrb.description,
+    },
+  ];
+
+  const getProfileDisplayName = (profile: CountryComparisonProfile) => {
+    if (profile.iso3 === "UZB") {
+      if (language === "ru") return "Узбекистан";
+      if (language === "uz") return "Oʻzbekiston";
+    }
+    return profile.name;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {METRICS_CONFIG.map((metric) => {
+      {metricsConfig.map((metric) => {
         // Find highest value among valid numbers to compute relative progress bars
         const validValues = profiles
           .map((p) => p.metrics[metric.code]?.value)
@@ -89,6 +92,7 @@ export function MetricComparisonCards({ profiles }: MetricComparisonCardsProps) 
                   const ratio = hasValue && item.value && item.value > 0
                     ? Math.min(100, Math.max(8, (item.value / maxValue) * 100))
                     : 0;
+                  const displayName = getProfileDisplayName(profile);
 
                   return (
                     <div key={profile.iso3} className="space-y-1.5">
@@ -100,7 +104,7 @@ export function MetricComparisonCards({ profiles }: MetricComparisonCardsProps) 
                           />
                           <span className="text-sm">{profile.flag}</span>
                           <span className="font-medium text-foreground">
-                            {profile.name}
+                            {displayName}
                           </span>
                           <span className="font-mono text-[10px] text-muted-foreground">
                             ({profile.iso3})
@@ -117,7 +121,7 @@ export function MetricComparisonCards({ profiles }: MetricComparisonCardsProps) 
                                 : "text-foreground"
                             }`}
                           >
-                            {hasValue ? item.formattedValue : "Data pending"}
+                            {hasValue ? item.formattedValue : t.common.dataPending}
                           </span>
                           {hasValue && item.year && (
                             <span className="ml-1.5 text-[10px] text-muted-foreground font-mono">
@@ -147,15 +151,6 @@ export function MetricComparisonCards({ profiles }: MetricComparisonCardsProps) 
                     </div>
                   );
                 })}
-              </div>
-
-              {/* Attribution and Verification Footer */}
-              <div className="pt-2 border-t border-border/30 flex items-center justify-between text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                  Official World Bank series
-                </span>
-                <span className="font-mono">Unit: {metric.unit}</span>
               </div>
             </CardContent>
           </Card>

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme/theme-provider";
+import { useTranslation, SupportedLocale } from "@/components/language";
 import { QuickSearchDialog } from "./quick-search-dialog";
 
 interface TopNavProps {
@@ -27,10 +28,10 @@ interface TopNavProps {
 
 export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useTranslation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState<"EN" | "UZ" | "RU">("EN");
 
   useEffect(() => {
     setMounted(true);
@@ -63,11 +64,11 @@ export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
             {/* Breadcrumb / Page Title */}
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <span className="font-semibold text-foreground tracking-tight hidden sm:inline">
-                WORLD POPULATION INTELLIGENCE
+                {t.nav.siteName}
               </span>
               <span className="text-muted-foreground hidden sm:inline">/</span>
               <span className="font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 text-xs">
-                Global Overview
+                {t.nav.globalOverview}
               </span>
             </div>
           </div>
@@ -80,7 +81,7 @@ export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
             >
               <span className="flex items-center gap-2 truncate">
                 <Search className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>Search nations, indicators, ISO codes...</span>
+                <span>{t.nav.searchPlaceholder}</span>
               </span>
               <kbd className="inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted/60 px-1.5 font-mono text-[10px] text-muted-foreground">
                 <span className="text-xs">⌘</span>K
@@ -96,8 +97,8 @@ export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
               size="icon"
               onClick={() => setSearchOpen(true)}
               className="md:hidden h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg"
-              title="Search"
-              aria-label="Search"
+              title={t.common.search}
+              aria-label={t.common.search}
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -105,7 +106,7 @@ export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
             {/* Live Data Connection Pill */}
             <div className="hidden xl:flex items-center gap-2 rounded-xl border border-border/80 bg-secondary/30 px-2.5 py-1 text-xs">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-medium text-muted-foreground">World Bank Live</span>
+              <span className="text-[11px] font-medium text-muted-foreground">{t.nav.liveBadge}</span>
             </div>
 
             {/* Theme Toggle (Dark / Light) */}
@@ -114,8 +115,8 @@ export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
               size="icon"
               onClick={toggleTheme}
               className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl transition-all"
-              title={mounted && theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              aria-label="Toggle theme"
+              title={mounted && theme === "dark" ? "Light Mode" : "Dark Mode"}
+              aria-label="Toggle visual theme"
             >
               {mounted && theme === "dark" ? (
                 <Sun className="h-4 w-4 text-amber-400 rotate-0 transition-transform" />
@@ -128,30 +129,34 @@ export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
             <div className="relative">
               <button
                 onClick={() => setLangMenuOpen((prev) => !prev)}
-                className="flex items-center gap-1 text-[11px] font-mono font-medium border border-border/80 bg-secondary/30 hover:bg-secondary/60 px-2 py-1 rounded-lg text-foreground transition-all"
+                className="flex items-center gap-1 text-[11px] font-mono font-medium border border-border/80 bg-secondary/30 hover:bg-secondary/60 px-2.5 py-1 rounded-lg text-foreground transition-all shadow-sm"
                 aria-label="Select language"
               >
                 <Globe2 className="h-3 w-3 text-muted-foreground" />
-                <span>{currentLang}</span>
+                <span>{language.toUpperCase()}</span>
                 <ChevronDown className="h-3 w-3 opacity-60" />
               </button>
 
               {langMenuOpen && (
                 <div
-                  className="absolute right-0 mt-1.5 w-24 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-1 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-100"
+                  className="absolute right-0 mt-1.5 w-28 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-1 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-100"
                   onClick={() => setLangMenuOpen(false)}
                 >
-                  {(["EN", "UZ", "RU"] as const).map((lang) => (
+                  {[
+                    { code: "en", label: "English (EN)" },
+                    { code: "uz", label: "O'zbek (UZ)" },
+                    { code: "ru", label: "Русский (RU)" },
+                  ].map(({ code, label }) => (
                     <button
-                      key={lang}
-                      onClick={() => setCurrentLang(lang)}
+                      key={code}
+                      onClick={() => setLanguage(code as SupportedLocale)}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
-                        currentLang === lang
+                        language === code
                           ? "bg-primary text-primary-foreground font-semibold"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                       }`}
                     >
-                      {lang}
+                      {label}
                     </button>
                   ))}
                 </div>

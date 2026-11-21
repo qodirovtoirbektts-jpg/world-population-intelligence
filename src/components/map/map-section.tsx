@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MetricSelector } from "./metric-selector";
 import { ColorLegend } from "./color-legend";
 import { MapControls } from "./map-controls";
@@ -11,12 +11,14 @@ import { WorldMapSvg } from "./world-map-svg";
 import { InteractiveGlobe } from "@/components/globe";
 import { MapSkeleton } from "./map-skeleton";
 import { MapMetricType, CountryMapData, MapTooltipState, SelectedCountryProfile } from "@/types/map";
-import { MapPin, AlertCircle, RefreshCw, Layers, Globe, Map as MapIcon, Sparkles } from "lucide-react";
+import { AlertCircle, Globe, Map as MapIcon, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExportDropdown } from "@/components/export";
+import { useTranslation } from "@/components/language";
 
 export function MapSection() {
+  const { t } = useTranslation();
   const [metric, setMetric] = useState<MapMetricType>("SP.POP.TOTL");
   const [viewMode, setViewMode] = useState<"globe" | "map">("globe");
   const [datasetsByMetric, setDatasetsByMetric] = useState<
@@ -129,14 +131,14 @@ export function MapSection() {
               <Globe className="h-4 w-4" />
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <span>Planetary Intelligence Centerpiece</span>
+              <span>{t.centerpiece.title}</span>
             </h2>
             <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10 text-[10px] py-0.5 px-2 font-mono">
-              Lepus 3D Engine
+              {t.centerpiece.engineBadge}
             </Badge>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Interactive 3D Earth Globe and Equal-Earth vector projections streaming authentic World Bank development indicators.
+            {t.centerpiece.subtitle}
           </p>
         </div>
 
@@ -153,7 +155,7 @@ export function MapSection() {
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
-              <span>3D Globe</span>
+              <span>{t.centerpiece.viewGlobe}</span>
             </button>
             <button
               onClick={() => setViewMode("map")}
@@ -164,7 +166,7 @@ export function MapSection() {
               }`}
             >
               <MapIcon className="h-3.5 w-3.5" />
-              <span>2D Map</span>
+              <span>{t.centerpiece.viewMap}</span>
             </button>
           </div>
 
@@ -181,7 +183,7 @@ export function MapSection() {
             className="gap-1.5 text-xs border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
           >
             <MapPin className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Focus Uzbekistan</span>
+            <span>{t.centerpiece.focusUzbekistan}</span>
           </Button>
 
           <UnmatchedStatus />
@@ -221,7 +223,7 @@ export function MapSection() {
                 onClick={() => loadMetricData(metric)}
                 className="h-6 px-2 text-[11px]"
               >
-                Retry
+                {t.common.retry}
               </Button>
             </div>
           )}

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Download, FileSpreadsheet, History, Globe2, Check, AlertCircle, Loader2, ChevronDown } from "lucide-react";
+import { Download, FileSpreadsheet, History, Globe2, Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CountryComparisonProfile, HistoricalYearPoint } from "@/types/comparison";
 import { DemographicIndicatorCode } from "@/types/world-bank";
 import { CountryMapData } from "@/types/map";
@@ -12,6 +11,7 @@ import {
   exportHistoricalTimeSeriesCsv,
   exportMapDatasetCsv,
 } from "@/lib/csv-export";
+import { useTranslation } from "@/components/language";
 
 interface ExportDropdownProps {
   profiles?: CountryComparisonProfile[];
@@ -30,6 +30,7 @@ export function ExportDropdown({
   className = "",
   variant = "all",
 }: ExportDropdownProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [downloadingType, setDownloadingType] = useState<string | null>(null);
   const [successType, setSuccessType] = useState<string | null>(null);
@@ -125,7 +126,7 @@ export function ExportDropdown({
         className="h-9 px-3 gap-2 border-border/80 bg-secondary/40 hover:bg-secondary/80 text-foreground font-medium text-xs rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-all"
       >
         <Download className="h-3.5 w-3.5 text-blue-400" aria-hidden="true" />
-        <span>Export CSV</span>
+        <span>{t.export.buttonLabel}</span>
         <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
       </Button>
 
@@ -138,128 +139,99 @@ export function ExportDropdown({
           className="absolute right-0 z-50 mt-2 w-80 sm:w-96 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-2xl p-2.5 space-y-1.5 focus:outline-none animate-in fade-in-0 zoom-in-95 duration-150"
         >
           {/* Header */}
-          <div className="px-3 py-2 border-b border-border/40 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-              <FileSpreadsheet className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-              <span>Official Demographic Datasets</span>
-            </div>
-            <Badge variant="outline" className="font-mono text-[10px] text-muted-foreground">
-              UTF-8 • BOM
-            </Badge>
+          <div className="px-3 py-2 border-b border-border/60">
+            <p className="text-xs font-semibold text-foreground">
+              {t.export.buttonLabel}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {t.common.officialFeed}
+            </p>
           </div>
 
-          {/* Option 1: Comparison Summary */}
-          {(variant === "all" || variant === "comparison") && (
-            <button
-              type="button"
-              role="menuitem"
-              disabled={!hasComparisonData || downloadingType === "comparison"}
-              onClick={handleExportComparison}
-              className={`w-full text-left p-3 rounded-xl transition-colors flex items-start gap-3 ${
-                hasComparisonData
-                  ? "hover:bg-primary/10 cursor-pointer focus-visible:bg-primary/10 focus-visible:outline-none"
-                  : "opacity-40 cursor-not-allowed"
-              }`}
-            >
-              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 mt-0.5 shrink-0">
-                {downloadingType === "comparison" ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-400" aria-hidden="true" />
-                ) : successType === "comparison" ? (
-                  <Check className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-                ) : (
-                  <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-xs text-foreground">
-                    Comparison Summary ({profiles.length} countries)
-                  </span>
-                  <span className="text-[10px] font-mono text-muted-foreground">.CSV</span>
+          <div className="space-y-1 pt-1">
+            {/* 1. Comparison Summary */}
+            {(variant === "comparison" || variant === "all") && (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={!hasComparisonData || downloadingType === "comparison"}
+                onClick={handleExportComparison}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/60 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed group focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 transition-colors shrink-0 mt-0.5">
+                    <FileSpreadsheet className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-foreground">
+                      {t.export.comparisonSummary}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {profiles.length} countries • 4 World Bank indicators
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                  Latest indicators (Population, Density, Growth, Urban Share) with reference years and official sources.
-                </p>
-              </div>
-            </button>
-          )}
-
-          {/* Option 2: Historical Time Series */}
-          {(variant === "all" || variant === "comparison") && (
-            <button
-              type="button"
-              role="menuitem"
-              disabled={!hasHistoricalData || downloadingType === "historical"}
-              onClick={handleExportHistorical}
-              className={`w-full text-left p-3 rounded-xl transition-colors flex items-start gap-3 ${
-                hasHistoricalData
-                  ? "hover:bg-primary/10 cursor-pointer focus-visible:bg-primary/10 focus-visible:outline-none"
-                  : "opacity-40 cursor-not-allowed"
-              }`}
-            >
-              <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 mt-0.5 shrink-0">
-                {downloadingType === "historical" ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-400" aria-hidden="true" />
-                ) : successType === "historical" ? (
-                  <Check className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-                ) : (
-                  <History className="h-4 w-4" aria-hidden="true" />
+                {successType === "comparison" && (
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                 )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-xs text-foreground">
-                    Historical Time Series (1960–2024)
-                  </span>
-                  <span className="text-[10px] font-mono text-muted-foreground">.CSV</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                  65-year longitudinal trajectory for all selected countries across all four core indicators.
-                </p>
-              </div>
-            </button>
-          )}
+              </button>
+            )}
 
-          {/* Option 3: Global Map Dataset */}
-          {(variant === "all" || variant === "map") && (
-            <button
-              type="button"
-              role="menuitem"
-              disabled={!hasMapData || downloadingType === "map"}
-              onClick={handleExportMap}
-              className={`w-full text-left p-3 rounded-xl transition-colors flex items-start gap-3 ${
-                hasMapData
-                  ? "hover:bg-primary/10 cursor-pointer focus-visible:bg-primary/10 focus-visible:outline-none"
-                  : "opacity-40 cursor-not-allowed"
-              }`}
-            >
-              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 mt-0.5 shrink-0">
-                {downloadingType === "map" ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-emerald-400" aria-hidden="true" />
-                ) : successType === "map" ? (
-                  <Check className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-                ) : (
-                  <Globe2 className="h-4 w-4" aria-hidden="true" />
+            {/* 2. Historical Time Series */}
+            {(variant === "comparison" || variant === "all") && (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={!hasHistoricalData || downloadingType === "historical"}
+                onClick={handleExportHistorical}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/60 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed group focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20 transition-colors shrink-0 mt-0.5">
+                    <History className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-foreground">
+                      {t.export.historicalSeries}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      1960–2024 time series • {profiles.length} countries
+                    </div>
+                  </div>
+                </div>
+                {successType === "historical" && (
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                 )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-xs text-foreground">
-                    Global Map Dataset (200+ Territories)
-                  </span>
-                  <span className="text-[10px] font-mono text-muted-foreground">.CSV</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                  Worldwide sovereign territorial figures for current indicator with ISO-3 codes and values.
-                </p>
-              </div>
-            </button>
-          )}
+              </button>
+            )}
 
-          {/* Footer Note */}
-          <div className="px-3 py-1.5 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground/80">
-            <span>Direct browser download</span>
-            <span>Excel & Sheets compatible</span>
+            {/* 3. Global Map Dataset */}
+            {(variant === "map" || variant === "all") && (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={!hasMapData || downloadingType === "map"}
+                onClick={handleExportMap}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/60 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed group focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors shrink-0 mt-0.5">
+                    <Globe2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-foreground">
+                      {t.export.mapDataset}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground font-mono">
+                      {activeMapMetric} • 177 sovereign nations
+                    </div>
+                  </div>
+                </div>
+                {successType === "map" && (
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                )}
+              </button>
+            )}
           </div>
         </div>
       )}

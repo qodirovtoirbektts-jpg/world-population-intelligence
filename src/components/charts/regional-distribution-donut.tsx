@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { PieChart as PieIcon, Globe2, Info } from "lucide-react";
+import { PieChart as PieIcon } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { WorldBankRegionalItem, VERIFIED_REGIONAL_SNAPSHOT } from "@/lib/world-bank";
+import { useTranslation } from "@/components/language";
 
 interface RegionalDistributionDonutProps {
   data?: WorldBankRegionalItem[];
 }
 
 export function RegionalDistributionDonut({ data }: RegionalDistributionDonutProps) {
+  const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const regionalData = data && data.length > 0 ? data : VERIFIED_REGIONAL_SNAPSHOT;
   const totalPopulation = regionalData.reduce((acc, curr) => acc + curr.population, 0);
@@ -21,22 +23,31 @@ export function RegionalDistributionDonut({ data }: RegionalDistributionDonutPro
     return `${(val / 1_000_000).toFixed(0)}M`;
   };
 
+  const getRegionName = (item: WorldBankRegionalItem) => {
+    const key = item.code as keyof typeof t.regional.regions;
+    if (t.regional.regions && t.regional.regions[key]) {
+      return t.regional.regions[key];
+    }
+    return item.region;
+  };
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
     const data = payload[0].payload;
+    const regionName = getRegionName(data);
 
     return (
       <div className="rounded-xl border border-border/90 bg-card/95 backdrop-blur-xl p-3 shadow-xl text-xs space-y-1.5 min-w-[180px]">
         <div className="flex items-center gap-2 font-semibold text-foreground">
           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: data.color }} />
-          <span>{data.region}</span>
+          <span>{regionName}</span>
         </div>
         <div className="flex items-center justify-between text-muted-foreground pt-1 border-t border-border/50">
           <span>Headcount:</span>
           <span className="font-mono font-bold text-foreground">{formatPop(data.population)}</span>
         </div>
         <div className="flex items-center justify-between text-muted-foreground">
-          <span>World Share:</span>
+          <span>{t.regional.shareLabel}:</span>
           <span className="font-mono font-bold text-primary">{data.share}%</span>
         </div>
       </div>
@@ -49,13 +60,13 @@ export function RegionalDistributionDonut({ data }: RegionalDistributionDonutPro
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-mono text-[10px] text-primary border-primary/30 bg-primary/10">
-              Distribution
+              {t.regional.badge}
             </Badge>
-            <span className="text-[10px] text-muted-foreground font-mono">World Bank Regional Aggregates</span>
+            <span className="text-[10px] text-muted-foreground font-mono">{t.regional.donutSubtitle}</span>
           </div>
           <CardTitle className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
             <PieIcon className="h-4 w-4 text-primary" />
-            Global Regional Population Shares
+            {t.regional.donutTitle}
           </CardTitle>
         </div>
       </CardHeader>
@@ -94,7 +105,7 @@ export function RegionalDistributionDonut({ data }: RegionalDistributionDonutPro
           {/* Center Donut Label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-              World Total
+              {t.regional.donutCenterTitle}
             </span>
             <span className="text-lg font-extrabold text-foreground font-sans">
               {formatPop(totalPopulation)}
@@ -107,24 +118,27 @@ export function RegionalDistributionDonut({ data }: RegionalDistributionDonutPro
 
         {/* Legend Chips Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-2 border-t border-border/50 text-xs">
-          {regionalData.map((item, idx) => (
-            <div
-              key={item.region}
-              className={`flex items-center justify-between p-1.5 rounded-lg transition-colors cursor-pointer ${
-                activeIndex === idx ? "bg-secondary/80 font-medium" : "hover:bg-secondary/40 text-muted-foreground"
-              }`}
-              onMouseEnter={() => setActiveIndex(idx)}
-              onMouseLeave={() => setActiveIndex(null)}
-            >
-              <div className="flex items-center gap-2 truncate">
-                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="truncate text-foreground text-[11px]">{item.region}</span>
+          {regionalData.map((item, idx) => {
+            const regionName = getRegionName(item);
+            return (
+              <div
+                key={item.region}
+                className={`flex items-center justify-between p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  activeIndex === idx ? "bg-secondary/80 font-medium" : "hover:bg-secondary/40 text-muted-foreground"
+                }`}
+                onMouseEnter={() => setActiveIndex(idx)}
+                onMouseLeave={() => setActiveIndex(null)}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="truncate text-foreground text-[11px]">{regionName}</span>
+                </div>
+                <span className="font-mono text-[11px] font-semibold text-foreground/90 shrink-0">
+                  {item.share}%
+                </span>
               </div>
-              <span className="font-mono text-[11px] font-semibold text-foreground/90 shrink-0">
-                {item.share}%
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

@@ -11,9 +11,10 @@ import {
   Cell,
   CartesianGrid,
 } from "recharts";
-import { BarChart2, ArrowUpDown } from "lucide-react";
+import { BarChart2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/components/language";
 
 // Real World Bank 2024 population totals for top benchmark nations + Uzbekistan
 const TOP_NATIONS_POPULATION = [
@@ -38,13 +39,23 @@ export function PopulationRankingBar({
   uzbekistanPopulation,
   uzbekistanYear = "2024",
 }: PopulationRankingBarProps) {
+  const { t, language } = useTranslation();
   const [activeIso, setActiveIso] = useState<string | null>(null);
 
-  const chartData = TOP_NATIONS_POPULATION.map((nation) => {
-    if (nation.iso3 === "UZB" && uzbekistanPopulation) {
-      return { ...nation, pop: uzbekistanPopulation };
+  const getCountryName = (iso3: string, defaultName: string) => {
+    if (iso3 === "UZB") {
+      if (language === "ru") return "Узбекистан";
+      if (language === "uz") return "Oʻzbekiston";
     }
-    return nation;
+    return defaultName;
+  };
+
+  const chartData = TOP_NATIONS_POPULATION.map((nation) => {
+    const updated = { ...nation, name: getCountryName(nation.iso3, nation.name) };
+    if (nation.iso3 === "UZB" && uzbekistanPopulation) {
+      return { ...updated, pop: uzbekistanPopulation };
+    }
+    return updated;
   });
 
   const uzbCurrent = chartData.find((n) => n.iso3 === "UZB")?.pop || 36361859;
@@ -71,7 +82,7 @@ export function PopulationRankingBar({
         </div>
         {item.isFeatured && (
           <div className="text-[10px] font-mono text-emerald-500 font-semibold pt-0.5">
-            ★ Featured Benchmark Nation
+            ★ {t.leagueTable.featuredBadge}
           </div>
         )}
       </div>
@@ -84,13 +95,13 @@ export function PopulationRankingBar({
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-mono text-[10px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10">
-              Comparative Ranking
+              {t.regional.badge}
             </Badge>
-            <span className="text-[10px] text-muted-foreground font-mono">2024 World Bank Headcount</span>
+            <span className="text-[10px] text-muted-foreground font-mono">{t.regional.barSubtitle}</span>
           </div>
           <CardTitle className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
             <BarChart2 className="h-4 w-4 text-emerald-500" />
-            Top Population Benchmarks & Uzbekistan
+            {t.regional.barTitle}
           </CardTitle>
         </div>
       </CardHeader>
@@ -138,18 +149,20 @@ export function PopulationRankingBar({
           </ResponsiveContainer>
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-border/50 text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm bg-blue-500" />
-              Global Mega-States
+        {/* Footnote displaying Uzbekistan live verification */}
+        <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="font-semibold text-foreground">
+              {getCountryName("UZB", "Uzbekistan")} ({uzbekistanYear}):
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
-              Uzbekistan ({formatPop(uzbCurrent)} • {uzbekistanYear})
+            <span className="font-mono text-emerald-500 font-bold">
+              {formatPop(uzbCurrent)}
             </span>
           </div>
-          <span className="font-mono text-[10px]">Source: World Bank WDI</span>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {t.regional.barFootnote}
+          </span>
         </div>
       </CardContent>
     </Card>

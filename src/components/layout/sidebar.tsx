@@ -20,6 +20,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+import { useTranslation } from "@/components/language";
+
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
@@ -35,10 +37,12 @@ export function AppSidebar({
   onCloseMobile,
   activeSection,
 }: SidebarProps) {
+  const { t, language } = useTranslation();
+
   const navItems = [
     {
       id: "overview",
-      label: "Global Dashboard",
+      label: t.nav.overview,
       href: "#overview",
       icon: BarChart3,
       badge: "WLD",
@@ -46,15 +50,15 @@ export function AppSidebar({
     },
     {
       id: "map-section",
-      label: "3D Globe & World Map",
+      label: t.nav.globeMap,
       href: "#map-section",
       icon: Globe,
-      badge: "3D Live",
+      badge: "3D",
       badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
     },
     {
       id: "compare-section",
-      label: "Country Comparison",
+      label: t.nav.compare,
       href: "#compare-section",
       icon: GitCompare,
       badge: "2–5",
@@ -62,7 +66,7 @@ export function AppSidebar({
     },
     {
       id: "historical-section",
-      label: "Historical Trends",
+      label: t.nav.historical,
       href: "#historical-section",
       icon: TrendingUp,
       badge: "1960–24",
@@ -70,7 +74,7 @@ export function AppSidebar({
     },
     {
       id: "ranking-section",
-      label: "Demographic Rankings",
+      label: t.nav.ranking,
       href: "#ranking-section",
       icon: ListOrdered,
       badge: "Top 20",
@@ -78,7 +82,7 @@ export function AppSidebar({
     },
     {
       id: "roadmap-section",
-      label: "Platform Roadmap",
+      label: t.nav.roadmap,
       href: "#roadmap-section",
       icon: Layers,
     },
@@ -163,7 +167,7 @@ export function AppSidebar({
           <div className="space-y-1">
             {!isCollapsed && (
               <div className="px-3 pb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                Analytics & Modules
+                {language === "uz" ? "Modullar va Tahlil" : language === "ru" ? "Модули и Аналитика" : "Analytics & Modules"}
               </div>
             )}
 
@@ -215,19 +219,23 @@ export function AppSidebar({
               <div className="flex items-center justify-between text-[11px] font-semibold text-foreground">
                 <span className="flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-                  Featured Country
+                  {t.common.featured}
                 </span>
                 <span className="text-xs">🇺🇿</span>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Uzbekistan (Central Asia) verified World Bank demographic baseline.
+                {language === "uz"
+                  ? "O'zbekiston (Markaziy Osiyo) rasmiy Jahon Banki demografik ko'rsatkichlari."
+                  : language === "ru"
+                  ? "Узбекистан (Центральная Азия) подтвержденные демографические показатели."
+                  : "Uzbekistan (Central Asia) verified World Bank demographic baseline."}
               </p>
               <a
                 href="#map-section"
                 className="inline-flex w-full items-center justify-center gap-1 text-[11px] font-medium text-primary hover:underline pt-1"
                 onClick={onCloseMobile}
               >
-                Inspect on World Map →
+                {t.centerpiece.focusUzbekistan} →
               </a>
             </div>
           )}

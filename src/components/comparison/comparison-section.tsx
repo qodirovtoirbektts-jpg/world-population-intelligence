@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { GitCompare, Sparkles, Database, ShieldCheck } from "lucide-react";
+import { GitCompare, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CountrySelector } from "./country-selector";
 import { MetricComparisonCards } from "./metric-comparison-cards";
 import { HistoricalChart } from "./historical-chart";
 import { ExportDropdown } from "@/components/export";
 import { generateComparisonDataset } from "@/lib/historical-data";
+import { useTranslation } from "@/components/language";
 
 export function ComparisonSection() {
+  const { t } = useTranslation();
   // Default benchmark: Uzbekistan vs United States vs China
   const [selectedCodes, setSelectedCodes] = useState<string[]>(["UZB", "USA", "CHN"]);
 
@@ -31,22 +33,21 @@ export function ComparisonSection() {
               className="bg-indigo-600 hover:bg-indigo-500 gap-1.5 py-0.5 px-2.5 text-xs"
             >
               <GitCompare className="h-3.5 w-3.5" />
-              Stage 4: Multi-Country Comparison Engine
+              {t.comparison.badge}
             </Badge>
             <Badge
               variant="outline"
               className="border-border text-xs text-muted-foreground font-mono"
             >
-              2 to 5 Countries • 1960–2024 Trends
+              {t.comparison.subBadge}
             </Badge>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
             <GitCompare className="h-6 w-6 text-indigo-400" />
-            Cross-National Demographic Intelligence
+            {t.comparison.title}
           </h2>
           <p className="text-sm text-muted-foreground max-w-2xl mt-1">
-            Perform in-depth side-by-side demographic evaluation across multiple sovereign nations.
-            Cross-compare population headcount, urban expansion, and growth trajectories powered by official World Bank time series.
+            {t.comparison.subtitle}
           </p>
         </div>
 
@@ -58,7 +59,7 @@ export function ComparisonSection() {
           />
           <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground bg-secondary/30 px-3 py-1.5 rounded-xl border border-border/60">
             <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            <span className="hidden sm:inline">Zero Fabricated Data</span>
+            <span className="hidden sm:inline">{t.comparison.zeroFabricated}</span>
           </div>
         </div>
       </div>

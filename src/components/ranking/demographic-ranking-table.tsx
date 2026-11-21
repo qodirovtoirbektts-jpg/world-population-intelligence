@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Search,
   ArrowUpDown,
@@ -8,16 +8,13 @@ import {
   TrendingDown,
   Globe2,
   FileSpreadsheet,
-  Compass,
-  Building2,
-  Users,
-  ChevronRight,
   Filter,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { downloadCsv, escapeCsvField } from "@/lib/csv-export";
+import { useTranslation } from "@/components/language";
 
 interface RankingRow {
   rank: number;
@@ -68,26 +65,36 @@ interface DemographicRankingTableProps {
 }
 
 export function DemographicRankingTable({ uzbekistanData }: DemographicRankingTableProps = {}) {
+  const { t, language } = useTranslation();
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("All");
   const [sortField, setSortField] = useState<SortField>("population");
   const [sortAsc, setSortAsc] = useState(false);
 
+  const getCountryName = useCallback((iso3: string, defaultName: string) => {
+    if (iso3 === "UZB") {
+      if (language === "ru") return "Узбекистан";
+      if (language === "uz") return "Oʻzbekiston";
+    }
+    return defaultName;
+  }, [language]);
+
   const baselineData = useMemo(() => {
-    if (!uzbekistanData) return DEMOGRAPHIC_RANKING_DATA;
     return DEMOGRAPHIC_RANKING_DATA.map((item) => {
-      if (item.iso3 === "UZB") {
+      const localizedName = getCountryName(item.iso3, item.name);
+      if (item.iso3 === "UZB" && uzbekistanData) {
         return {
           ...item,
+          name: localizedName,
           population: uzbekistanData.population,
           density: uzbekistanData.density,
           growth: uzbekistanData.growth,
           urban: uzbekistanData.urban,
         };
       }
-      return item;
+      return { ...item, name: localizedName };
     });
-  }, [uzbekistanData]);
+  }, [uzbekistanData, getCountryName]);
 
   const regions = useMemo(() => {
     const list = Array.from(new Set(baselineData.map((d) => d.region)));
@@ -139,187 +146,166 @@ export function DemographicRankingTable({ uzbekistanData }: DemographicRankingTa
   };
 
   return (
-    <section id="ranking-section" className="space-y-4 scroll-mt-20">
-      <Card className="rounded-2xl border border-border/80 bg-card/80 backdrop-blur-xl shadow-sm overflow-hidden">
-        <CardHeader className="p-5 sm:p-6 pb-4 border-b border-border/60">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="outline" className="font-mono text-[10px] text-purple-400 border-purple-500/30 bg-purple-500/10">
-                  Data Intelligence
-                </Badge>
-                <span className="text-xs text-muted-foreground font-mono">World Bank WDI Metrics</span>
-              </div>
-              <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                <Globe2 className="h-5 w-5 text-purple-400" />
-                Global Demographic League Table
-              </CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Multi-metric demographic rankings across global sovereign powers and regional benchmarks.
-              </p>
-            </div>
+    <Card id="ranking-section" className="rounded-2xl border border-border/80 bg-card/70 backdrop-blur-xl shadow-lg scroll-mt-20">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Badge variant="outline" className="font-mono text-xs text-blue-400 border-blue-500/30 bg-blue-500/10">
+              {t.leagueTable.badge}
+            </Badge>
+            <span className="text-xs text-muted-foreground font-mono">{t.leagueTable.sourceBadge}</span>
+          </div>
+          <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Globe2 className="h-5 w-5 text-blue-400" />
+            {t.leagueTable.title}
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t.leagueTable.subtitle}
+          </p>
+        </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportCsv}
-              className="gap-2 text-xs font-mono h-9 shrink-0 self-start sm:self-center"
+        {/* Filter and Export Toolbar */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Quick Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t.leagueTable.searchPlaceholder}
+              className="h-8 pl-8 pr-3 rounded-lg border border-border/70 bg-secondary/40 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Region Filter */}
+          <div className="flex items-center gap-1.5 bg-secondary/40 border border-border/70 rounded-lg px-2 h-8">
+            <Filter className="h-3 w-3 text-muted-foreground" />
+            <select
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className="bg-transparent text-xs text-foreground focus:outline-none cursor-pointer"
             >
-              <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
-              <span>Export CSV</span>
-            </Button>
-          </div>
-
-          {/* Search & Region Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-4">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Filter by country or ISO-3..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-border/80 bg-secondary/40 pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0 hidden sm:inline" />
-              {regions.slice(0, 5).map((reg) => (
-                <button
-                  key={reg}
-                  onClick={() => setSelectedRegion(reg)}
-                  className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all shrink-0 ${
-                    selectedRegion === reg
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                  }`}
-                >
-                  {reg}
-                </button>
+              {regions.map((r) => (
+                <option key={r} value={r} className="bg-card text-foreground">
+                  {r === "All" ? t.leagueTable.allRegions : r}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
-        </CardHeader>
 
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          {/* CSV Export Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            className="h-8 px-2.5 text-xs gap-1.5 border-border/80"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">{t.leagueTable.exportCsv}</span>
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-4 p-0 sm:p-5">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-border/60 bg-muted/40 font-mono text-[11px] text-muted-foreground">
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4 font-semibold text-foreground">Sovereign Nation</th>
-                <th className="py-3 px-4 text-right cursor-pointer hover:text-foreground transition-colors" onClick={() => handleSort("population")}>
-                  <div className="flex items-center justify-end gap-1">
-                    <span>Population (2024)</span>
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
+              <tr className="border-b border-border/60 text-muted-foreground font-mono text-[11px] uppercase tracking-wider bg-secondary/20">
+                <th className="py-3 px-4 font-semibold w-12 cursor-pointer" onClick={() => handleSort("rank")}>
+                  <div className="flex items-center gap-1">{t.leagueTable.colRank} <ArrowUpDown className="h-3 w-3" /></div>
                 </th>
-                <th className="py-3 px-4 text-right cursor-pointer hover:text-foreground transition-colors hidden md:table-cell" onClick={() => handleSort("density")}>
-                  <div className="flex items-center justify-end gap-1">
-                    <span>Density (/km²)</span>
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
+                <th className="py-3 px-4 font-semibold">{t.leagueTable.colCountry}</th>
+                <th className="py-3 px-3 font-semibold">{t.leagueTable.colIso}</th>
+                <th className="py-3 px-3 font-semibold hidden md:table-cell">{t.leagueTable.colRegion}</th>
+                <th className="py-3 px-4 font-semibold text-right cursor-pointer" onClick={() => handleSort("population")}>
+                  <div className="flex items-center justify-end gap-1">{t.leagueTable.colPop} <ArrowUpDown className="h-3 w-3" /></div>
                 </th>
-                <th className="py-3 px-4 text-right cursor-pointer hover:text-foreground transition-colors" onClick={() => handleSort("growth")}>
-                  <div className="flex items-center justify-end gap-1">
-                    <span>Growth Rate</span>
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
+                <th className="py-3 px-4 font-semibold text-right cursor-pointer" onClick={() => handleSort("density")}>
+                  <div className="flex items-center justify-end gap-1">{t.leagueTable.colDnst} <ArrowUpDown className="h-3 w-3" /></div>
                 </th>
-                <th className="py-3 px-4 text-right cursor-pointer hover:text-foreground transition-colors hidden sm:table-cell" onClick={() => handleSort("urban")}>
-                  <div className="flex items-center justify-end gap-1">
-                    <span>Urban Share</span>
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
+                <th className="py-3 px-4 font-semibold text-right cursor-pointer" onClick={() => handleSort("growth")}>
+                  <div className="flex items-center justify-end gap-1">{t.leagueTable.colGrow} <ArrowUpDown className="h-3 w-3" /></div>
                 </th>
-                <th className="py-3 px-4 w-28 text-center hidden lg:table-cell">Global Scale</th>
+                <th className="py-3 px-4 font-semibold text-right cursor-pointer hidden sm:table-cell" onClick={() => handleSort("urban")}>
+                  <div className="flex items-center justify-end gap-1">{t.leagueTable.colUrb} <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40 font-sans">
-              {filteredData.map((row, index) => {
-                const isUzbekistan = row.iso3 === "UZB";
-                const isGrowthPositive = row.growth > 0;
-                const scaleWidth = Math.min(Math.max((row.population / 1441000000) * 100, 3), 100);
+            <tbody className="divide-y divide-border/40">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    {t.leagueTable.noResults}
+                  </td>
+                </tr>
+              ) : (
+                filteredData.map((row, idx) => {
+                  const isFeatured = row.iso3 === "UZB";
 
-                return (
-                  <tr
-                    key={row.iso3}
-                    className={`hover:bg-muted/30 transition-colors ${
-                      isUzbekistan ? "bg-emerald-500/5 font-medium" : ""
-                    }`}
-                  >
-                    <td className="py-3 px-4 text-center font-mono text-muted-foreground text-[11px]">
-                      {index + 1}
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-base shrink-0">{row.flag}</span>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-foreground">{row.name}</span>
-                            <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.2 rounded border border-border/50">
-                              {row.iso3}
-                            </span>
-                            {isUzbekistan && (
-                              <Badge className="bg-emerald-500 text-white text-[9px] px-1.5 py-0">
-                                Featured
-                              </Badge>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground hidden sm:block">
-                            {row.region}
-                          </span>
+                  return (
+                    <tr
+                      key={row.iso3}
+                      className={`transition-colors hover:bg-secondary/40 ${
+                        isFeatured ? "bg-emerald-950/20 font-medium" : ""
+                      }`}
+                    >
+                      <td className="py-3 px-4 font-mono text-muted-foreground">
+                        {idx + 1}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{row.flag}</span>
+                          <span className="font-semibold text-foreground">{row.name}</span>
+                          {isFeatured && (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 text-emerald-400 border-emerald-500/40 bg-emerald-500/10">
+                              {t.leagueTable.featuredBadge}
+                            </Badge>
+                          )}
                         </div>
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-4 text-right font-mono font-bold text-foreground">
-                      {formatPop(row.population)}
-                    </td>
-
-                    <td className="py-3 px-4 text-right font-mono text-muted-foreground hidden md:table-cell">
-                      {row.density.toFixed(1)}
-                    </td>
-
-                    <td className="py-3 px-4 text-right font-mono">
-                      <span
-                        className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                          isGrowthPositive
-                            ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                            : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                        }`}
-                      >
-                        {isGrowthPositive ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        <span>{isGrowthPositive ? `+${row.growth.toFixed(2)}%` : `${row.growth.toFixed(2)}%`}</span>
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4 text-right font-mono text-foreground/90 hidden sm:table-cell">
-                      {row.urban.toFixed(1)}%
-                    </td>
-
-                    <td className="py-3 px-4 hidden lg:table-cell">
-                      <div className="w-full bg-secondary/50 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className={`h-1.5 rounded-full ${
-                            isUzbekistan ? "bg-emerald-500" : "bg-primary"
+                      </td>
+                      <td className="py-3 px-3 font-mono text-[11px] text-muted-foreground">
+                        {row.iso3}
+                      </td>
+                      <td className="py-3 px-3 text-muted-foreground hidden md:table-cell">
+                        {row.region}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-foreground">
+                        {formatPop(row.population)}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono text-muted-foreground">
+                        {row.density.toFixed(1)}
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono">
+                        <span
+                          className={`inline-flex items-center gap-0.5 ${
+                            row.growth >= 0 ? "text-emerald-400" : "text-rose-400"
                           }`}
-                          style={{ width: `${scaleWidth}%` }}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                        >
+                          {row.growth >= 0 ? (
+                            <TrendingUp className="h-3 w-3" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3" />
+                          )}
+                          {row.growth.toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono text-muted-foreground hidden sm:table-cell">
+                        {row.urban.toFixed(1)}%
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
-    </section>
+        </div>
+
+        <div className="p-3 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+          <span>{t.leagueTable.showingRows}: {filteredData.length}</span>
+          <span>{t.common.officialFeed}</span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

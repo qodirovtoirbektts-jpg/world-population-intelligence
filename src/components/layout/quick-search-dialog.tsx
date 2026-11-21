@@ -5,6 +5,7 @@ import { Search, X, Globe, ArrowRight, TrendingUp, Compass, Users } from "lucide
 import { ALL_COUNTRIES } from "@/lib/country-registry";
 import { INDICATORS } from "@/lib/world-bank";
 import { DemographicIndicatorCode } from "@/types/world-bank";
+import { useTranslation } from "@/components/language";
 
 interface QuickSearchDialogProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function QuickSearchDialog({
   onClose,
   onSelectCountry,
 }: QuickSearchDialogProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -74,7 +76,7 @@ export function QuickSearchDialog({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search countries, ISO-3 codes, or indicators... (e.g. Uzbekistan, USA, Density)"
+            placeholder={t.searchModal.placeholder}
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {query && (
@@ -95,7 +97,7 @@ export function QuickSearchDialog({
           {/* Countries Section */}
           <div className="space-y-1">
             <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Sovereign Nations & Territories
+              {t.searchModal.sectionCountries}
             </div>
             {filteredCountries.length > 0 ? (
               filteredCountries.map((c) => (
@@ -125,7 +127,7 @@ export function QuickSearchDialog({
               ))
             ) : (
               <div className="px-3 py-2 text-xs text-muted-foreground">
-                No matching countries found for &quot;{query}&quot;.
+                {t.searchModal.noResults}
               </div>
             )}
           </div>
@@ -133,7 +135,7 @@ export function QuickSearchDialog({
           {/* Indicators Section */}
           <div className="space-y-1 pt-1 border-t border-border/50">
             <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              World Bank Core Indicators
+              {t.searchModal.sectionIndicators}
             </div>
             {filteredIndicators.map(([code, item]) => (
               <a
@@ -156,8 +158,8 @@ export function QuickSearchDialog({
 
         {/* Footer info */}
         <div className="flex items-center justify-between px-4 py-2 border-t border-border/60 bg-muted/30 text-[11px] text-muted-foreground">
-          <span>Official World Bank WDI Dataset</span>
-          <span>Tip: Press ⌘K anywhere to search</span>
+          <span>{t.searchModal.footerDataset}</span>
+          <span>{t.searchModal.footerTip}</span>
         </div>
       </div>
     </div>
