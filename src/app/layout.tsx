@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased text-foreground">
+      <body className="min-h-screen bg-background font-sans antialiased text-foreground overflow-x-hidden">
         <ThemeProvider defaultTheme="dark">
           <LanguageProvider defaultLang="en">
             <DashboardShell>{children}</DashboardShell>

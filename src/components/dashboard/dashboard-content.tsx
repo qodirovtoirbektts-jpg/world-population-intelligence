@@ -54,7 +54,7 @@ export function DashboardContent({
   const urbShare = metrics["SP.URB.TOTL.IN.ZS"] || { formattedValue: "57.57%", year: "2024", source: "World Bank", isAvailable: true };
 
   return (
-    <div className="container max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-10">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-10">
       {/* 1. Hero Analytics Header (Lepus Data Visualization System) */}
       <section
         id="overview"
