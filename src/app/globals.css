@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    /* Light Mode - Clean Porcelain & Crisp Slate */
-    --background: 210 40% 98%;
+    /* Oq–Ko'k Editorial Light Mode (Primary) */
+    --background: 216 38% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -14,71 +14,59 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 221 83% 47%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 214 60% 96%;
+    --secondary-foreground: 222 47% 14%;
 
-    --muted: 210 40% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 214 32% 95%;
+    --muted-foreground: 215 19% 42%;
 
-    --accent: 214 32% 93%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 214 85% 95%;
+    --accent-foreground: 221 83% 38%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 88%;
-    --input: 214 32% 88%;
-    --ring: 221 83% 53%;
+    --border: 214 30% 89%;
+    --input: 214 30% 86%;
+    --ring: 221 83% 47%;
 
     --radius: 0.75rem;
-
-    /* Lepus Custom Token Accents */
-    --lepus-surface: 0 0% 100%;
-    --lepus-border: 214 32% 90%;
-    --lepus-sidebar: 210 40% 97%;
-    --lepus-topbar: 0 0% 100%;
   }
 
   .dark {
-    /* Dark Mode - Obsidian & Deep Slate (Lepus Signature) */
-    --background: 224 71% 5%;
+    /* Optional High-Contrast Night Mode */
+    --background: 222 47% 7%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 9%;
+    --card: 222 44% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 9%;
+    --popover: 222 44% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 224 92% 64%;
-    --primary-foreground: 224 71% 4%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 217 33% 14%;
+    --secondary: 217 33% 16%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 33% 12%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217 33% 15%;
+    --muted-foreground: 215 20% 68%;
 
-    --accent: 217 33% 16%;
+    --accent: 217 33% 19%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 63% 45%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 224 92% 64%;
+    --border: 217 30% 20%;
+    --input: 217 30% 20%;
+    --ring: 217 91% 60%;
 
     --radius: 0.75rem;
-
-    /* Lepus Custom Token Accents */
-    --lepus-surface: 222 47% 8%;
-    --lepus-border: 217 33% 18%;
-    --lepus-sidebar: 224 71% 6%;
-    --lepus-topbar: 224 71% 6%;
   }
 }
 
@@ -86,40 +74,31 @@
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground antialiased min-h-screen selection:bg-primary/20 selection:text-primary transition-colors duration-200;
+    @apply bg-background text-foreground antialiased min-h-screen selection:bg-primary/15 selection:text-primary transition-colors duration-200;
     font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
   }
 }
 
-/* Lepus Glass & Surface Design Language */
-.lepus-card {
-  @apply rounded-2xl border border-border/80 bg-card/80 backdrop-blur-md transition-all duration-200;
+/* Editorial White & Blue Surfaces */
+.editorial-card {
+  @apply rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(29,78,216,0.08)] transition-all duration-200;
 }
 
-.lepus-card:hover {
-  @apply border-border shadow-md;
+.editorial-card:hover {
+  @apply border-blue-200 dark:border-blue-800/60 shadow-[0_2px_6px_rgba(15,23,42,0.05),0_12px_28px_-12px_rgba(29,78,216,0.14)];
 }
 
-.lepus-glass {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(14px);
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
-.dark .lepus-glass {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(14px);
-}
-
-.lepus-glow-primary {
-  box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.18);
-}
-
-.lepus-glow-emerald {
-  box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.15);
-}
-
-/* Custom Scrollbars */
+/* Subtle Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

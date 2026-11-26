@@ -1,22 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Menu,
-  Search,
-  Sun,
-  Moon,
-  Bell,
-  Globe2,
-  FileSpreadsheet,
-  Download,
-  Share2,
-  ExternalLink,
-  ChevronDown,
-  Sparkles,
-} from "lucide-react";
+import { Menu, Search, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme/theme-provider";
 import { useTranslation, SupportedLocale } from "@/components/language";
 import { QuickSearchDialog } from "./quick-search-dialog";
@@ -26,12 +12,11 @@ interface TopNavProps {
   isSidebarCollapsed: boolean;
 }
 
-export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
+export function TopNav({ onToggleSidebar }: TopNavProps) {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useTranslation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -45,150 +30,109 @@ export function TopNav({ onToggleSidebar, isSidebarCollapsed }: TopNavProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const locales: Array<{ code: SupportedLocale; label: string }> = [
+    { code: "uz", label: "O‘Z" },
+    { code: "en", label: "EN" },
+    { code: "ru", label: "RU" },
+  ];
+
   return (
     <>
-      <header className="sticky top-0 z-30 w-full border-b border-border/80 bg-card/80 backdrop-blur-xl transition-all">
+      <header className="sticky top-0 z-30 w-full border-b border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 gap-3">
-          {/* Left section: Hamburger / Breadcrumb */}
-          <div className="flex items-center gap-3">
+          {/* Left: Mobile Menu + Editorial Breadcrumb */}
+          <div className="flex items-center gap-3 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={onToggleSidebar}
-              className="h-9 w-9 text-muted-foreground hover:text-foreground lg:hidden rounded-xl"
+              className="h-9 w-9 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden rounded-xl shrink-0"
               aria-label="Toggle navigation menu"
             >
               <Menu className="h-5 w-5" />
             </Button>
 
-            {/* Breadcrumb / Page Title */}
-            <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <span className="font-semibold text-foreground tracking-tight hidden sm:inline">
+            <div className="flex items-center gap-2 text-xs sm:text-sm min-w-0">
+              <span className="font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate">
                 {t.nav.siteName}
               </span>
-              <span className="text-muted-foreground hidden sm:inline">/</span>
-              <span className="font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 text-xs">
+              <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">/</span>
+              <span className="hidden sm:inline-flex font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/70 px-2.5 py-0.5 rounded-full border border-blue-200/70 dark:border-blue-800 text-xs">
                 {t.nav.globalOverview}
               </span>
             </div>
           </div>
 
-          {/* Center: Global Search Bar */}
+          {/* Center: Quick Country Search */}
           <div className="flex-1 max-w-md hidden md:block">
             <button
+              type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex w-full items-center justify-between gap-2 rounded-xl border border-border/80 bg-secondary/40 px-3.5 py-2 text-xs text-muted-foreground hover:border-border hover:bg-secondary/60 hover:text-foreground transition-all shadow-sm"
+              className="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900 px-3.5 py-2 text-xs text-slate-500 dark:text-slate-400 hover:border-blue-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 transition-all"
             >
               <span className="flex items-center gap-2 truncate">
-                <Search className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>{t.nav.searchPlaceholder}</span>
+                <Search className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                <span className="truncate">{t.nav.searchPlaceholder}</span>
               </span>
-              <kbd className="inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted/60 px-1.5 font-mono text-[10px] text-muted-foreground">
-                <span className="text-xs">⌘</span>K
+              <kbd className="inline-flex h-5 items-center gap-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 font-mono text-[10px] text-slate-500 shrink-0">
+                ⌘K
               </kbd>
             </button>
           </div>
 
-          {/* Right section: Telemetry, Theme Switcher, Language, User */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Mobile search button */}
+          {/* Right: Mobile Search, Direct Language Switcher, Theme */}
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSearchOpen(true)}
-              className="md:hidden h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg"
+              className="md:hidden h-8 w-8 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-lg"
               title={t.common.search}
               aria-label={t.common.search}
             >
               <Search className="h-4 w-4" />
             </Button>
 
-            {/* Live Data Connection Pill */}
-            <div className="hidden xl:flex items-center gap-2 rounded-xl border border-border/80 bg-secondary/30 px-2.5 py-1 text-xs">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-medium text-muted-foreground">{t.nav.liveBadge}</span>
+            {/* Clean Segmented Language Switcher (UZ primary) */}
+            <div
+              className="inline-flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+              role="group"
+              aria-label="Language switcher"
+            >
+              {locales.map((loc) => (
+                <button
+                  key={loc.code}
+                  type="button"
+                  onClick={() => setLanguage(loc.code)}
+                  className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                    language === loc.code
+                      ? "bg-blue-700 text-white shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                  }`}
+                >
+                  {loc.label}
+                </button>
+              ))}
             </div>
 
-            {/* Theme Toggle (Dark / Light) */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl transition-all"
-              title={mounted && theme === "dark" ? "Light Mode" : "Dark Mode"}
+              className="h-8 w-8 text-slate-600 dark:text-slate-300 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-xl"
+              title={mounted && theme === "dark" ? "Yorug‘ rejim" : "Tungi rejim"}
               aria-label="Toggle visual theme"
             >
               {mounted && theme === "dark" ? (
-                <Sun className="h-4 w-4 text-amber-400 rotate-0 transition-transform" />
+                <Sun className="h-4 w-4 text-amber-400" />
               ) : (
-                <Moon className="h-4 w-4 text-indigo-400 rotate-0 transition-transform" />
+                <Moon className="h-4 w-4 text-blue-700" />
               )}
             </Button>
-
-            {/* Language Switcher */}
-            <div className="relative">
-              <button
-                onClick={() => setLangMenuOpen((prev) => !prev)}
-                className="flex items-center gap-1 text-[11px] font-mono font-medium border border-border/80 bg-secondary/30 hover:bg-secondary/60 px-2.5 py-1 rounded-lg text-foreground transition-all shadow-sm"
-                aria-label="Select language"
-              >
-                <Globe2 className="h-3 w-3 text-muted-foreground" />
-                <span>{language.toUpperCase()}</span>
-                <ChevronDown className="h-3 w-3 opacity-60" />
-              </button>
-
-              {langMenuOpen && (
-                <div
-                  className="absolute right-0 mt-1.5 w-28 rounded-xl border border-border/80 bg-card/95 backdrop-blur-xl p-1 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-100"
-                  onClick={() => setLangMenuOpen(false)}
-                >
-                  {[
-                    { code: "en", label: "English (EN)" },
-                    { code: "uz", label: "O'zbek (UZ)" },
-                    { code: "ru", label: "Русский (RU)" },
-                  ].map(({ code, label }) => (
-                    <button
-                      key={code}
-                      onClick={() => setLanguage(code as SupportedLocale)}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
-                        language === code
-                          ? "bg-primary text-primary-foreground font-semibold"
-                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Notification Bell */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl"
-              title="Notifications"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
-            </Button>
-
-            {/* User Profile Avatar */}
-            <div className="flex items-center gap-2 pl-1 border-l border-border/60">
-              <div
-                className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-indigo-500/20"
-                title="Demographic Researcher"
-              >
-                DR
-              </div>
-            </div>
           </div>
         </div>
       </header>
 
-      {/* Quick Search Dialog */}
       <QuickSearchDialog
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}

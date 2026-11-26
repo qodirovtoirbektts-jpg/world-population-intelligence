@@ -12,7 +12,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType>({
   language: defaultLocale,
   setLanguage: () => {},
-  t: dictionaries.en,
+  t: dictionaries.uz,
 });
 
 const STORAGE_KEY = "wpi_language";

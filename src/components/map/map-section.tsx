@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MetricSelector } from "./metric-selector";
 import { ColorLegend } from "./color-legend";
 import { MapControls } from "./map-controls";
@@ -8,17 +8,20 @@ import { MapTooltip } from "./map-tooltip";
 import { CountryDetailPanel } from "./country-detail-panel";
 import { UnmatchedStatus } from "./unmatched-status";
 import { WorldMapSvg } from "./world-map-svg";
-import { InteractiveGlobe } from "@/components/globe";
+import { InteractiveGlobe, GlobeExternalFocus } from "@/components/globe";
 import { MapSkeleton } from "./map-skeleton";
 import { MapMetricType, CountryMapData, MapTooltipState, SelectedCountryProfile } from "@/types/map";
-import { AlertCircle, Globe, Map as MapIcon, MapPin } from "lucide-react";
+import { AlertCircle, Globe, Map as MapIcon, MapPin, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ExportDropdown } from "@/components/export";
 import { useTranslation } from "@/components/language";
+import { useDashboard } from "@/components/dashboard/dashboard-context";
+import { getLocalizedCountryName } from "@/lib/country-names";
 
 export function MapSection() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const { globeFocusRequest, regionFocusRequest } = useDashboard();
+
   const [metric, setMetric] = useState<MapMetricType>("SP.POP.TOTL");
   const [viewMode, setViewMode] = useState<"globe" | "map">("globe");
   const [datasetsByMetric, setDatasetsByMetric] = useState<
@@ -30,6 +33,7 @@ export function MapSection() {
   const [selectedIso3, setSelectedIso3] = useState<string | null>("UZB");
   const [selectedProfile, setSelectedProfile] = useState<SelectedCountryProfile | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState<boolean>(false);
+  const [mobilePanelExpanded, setMobilePanelExpanded] = useState<boolean>(true);
 
   const [tooltip, setTooltip] = useState<MapTooltipState | null>(null);
   const [position, setPosition] = useState<{ coordinates: [number, number]; zoom: number }>({
@@ -37,42 +41,40 @@ export function MapSection() {
     zoom: 1,
   });
 
-  // Fetch map dataset for active metric
-  const loadMetricData = useCallback(async (targetMetric: MapMetricType) => {
-    // Return early if cached in memory
-    if (datasetsByMetric[targetMetric]) {
-      return;
-    }
+  const loadMetricData = useCallback(
+    async (targetMetric: MapMetricType) => {
+      if (datasetsByMetric[targetMetric]) return;
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const res = await fetch(`/api/demographics?map=true&indicator=${targetMetric}`);
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      try {
+        const res = await fetch(`/api/demographics?map=true&indicator=${targetMetric}`);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
 
-      const json = await res.json();
-      setDatasetsByMetric((prev) => ({
-        ...prev,
-        [targetMetric]: json.data || {},
-      }));
-    } catch (err) {
-      console.error("[MapSection] Failed to load map metric:", err);
-      setError("Failed to stream demographic data. Please retry.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [datasetsByMetric]);
+        const json = await res.json();
+        setDatasetsByMetric((prev) => ({
+          ...prev,
+          [targetMetric]: json.data || {},
+        }));
+      } catch (err) {
+        console.error("[MapSection] Failed to load map metric:", err);
+        setError(t.common.error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [datasetsByMetric, t.common.error]
+  );
 
-  // Load initial metric on mount
   useEffect(() => {
     loadMetricData(metric);
   }, [metric, loadMetricData]);
 
-  // Fetch full profile for selected country
   const loadCountryProfile = useCallback(async (iso3: string, countryName?: string) => {
     setSelectedIso3(iso3);
     setIsProfileLoading(true);
+    setMobilePanelExpanded(true);
 
     try {
       const url = `/api/demographics?country=${iso3}&profile=true${
@@ -90,24 +92,41 @@ export function MapSection() {
     }
   }, []);
 
-  // Preload Uzbekistan profile on first render
   useEffect(() => {
     loadCountryProfile("UZB", "Uzbekistan");
   }, [loadCountryProfile]);
 
-  // Map Navigation Handlers
+  // Convert global region focus request into globe rotation/scale
+  const externalGlobeFocus = useMemo<GlobeExternalFocus | null>(() => {
+    if (!regionFocusRequest) return null;
+    return {
+      rotation: [-regionFocusRequest.coordinates[0], -regionFocusRequest.coordinates[1], 0],
+      scale: regionFocusRequest.zoomScale,
+      seq: regionFocusRequest.seq,
+    };
+  }, [regionFocusRequest]);
+
+  const focusCountryTrigger = useMemo(() => {
+    if (!globeFocusRequest) return null;
+    return { iso3: globeFocusRequest.iso3, seq: globeFocusRequest.seq };
+  }, [globeFocusRequest]);
+
+  // Also switch 2D map center if user triggers region focus while in 2D mode
+  useEffect(() => {
+    if (regionFocusRequest && viewMode === "map") {
+      setPosition({
+        coordinates: regionFocusRequest.coordinates,
+        zoom: Math.min(5, Math.max(1.5, regionFocusRequest.zoomScale / 180)),
+      });
+    }
+  }, [regionFocusRequest, viewMode]);
+
   const handleZoomIn = () => {
-    setPosition((pos) => ({
-      ...pos,
-      zoom: Math.min(pos.zoom * 1.5, 8),
-    }));
+    setPosition((pos) => ({ ...pos, zoom: Math.min(pos.zoom * 1.5, 8) }));
   };
 
   const handleZoomOut = () => {
-    setPosition((pos) => ({
-      ...pos,
-      zoom: Math.max(pos.zoom / 1.5, 1),
-    }));
+    setPosition((pos) => ({ ...pos, zoom: Math.max(pos.zoom / 1.5, 1) }));
   };
 
   const handleReset = () => {
@@ -120,49 +139,54 @@ export function MapSection() {
   };
 
   const currentDataset = datasetsByMetric[metric] || {};
+  const mobileDisplayName = selectedProfile
+    ? getLocalizedCountryName(selectedProfile.iso3, selectedProfile.name, language)
+    : t.countryPanel.mobileTitle;
 
   return (
-    <section id="map-section" className="space-y-6 scroll-mt-20">
+    <section id="map-section" className="space-y-5 scroll-mt-20">
       {/* Section Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
-              <Globe className="h-4 w-4" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <span>{t.centerpiece.title}</span>
-            </h2>
-            <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10 text-[10px] py-0.5 px-2 font-mono">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800">
+              <Globe className="h-3 w-3" />
               {t.centerpiece.engineBadge}
-            </Badge>
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {t.centerpiece.globeBadgeProjection}
+            </span>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            {t.centerpiece.title}
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
             {t.centerpiece.subtitle}
           </p>
         </div>
 
-        {/* View Mode Toggle & Quick Country Focus & CSV Export */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Dual Projection Toggle (3D Globe vs 2D Flat Map) */}
-          <div className="flex items-center p-1 rounded-xl bg-secondary/50 border border-border/70 text-xs font-mono shadow-sm">
+        {/* View Switcher & Export */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
             <button
+              type="button"
               onClick={() => setViewMode("globe")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all font-medium ${
                 viewMode === "globe"
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 shadow-sm font-semibold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
               <span>{t.centerpiece.viewGlobe}</span>
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("map")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all font-medium ${
                 viewMode === "map"
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 shadow-sm font-semibold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
               <MapIcon className="h-3.5 w-3.5" />
@@ -171,7 +195,7 @@ export function MapSection() {
           </div>
 
           <ExportDropdown
-            mapDataset={datasetsByMetric[metric] || {}}
+            mapDataset={currentDataset}
             activeMapMetric={metric}
             variant="map"
           />
@@ -180,9 +204,9 @@ export function MapSection() {
             variant="outline"
             size="sm"
             onClick={handleFocusUzbekistan}
-            className="gap-1.5 text-xs border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
+            className="gap-1.5 text-xs h-9 rounded-xl border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50/70 dark:bg-blue-950/50 hover:bg-blue-100"
           >
-            <MapPin className="h-3.5 w-3.5 text-emerald-400" />
+            <MapPin className="h-3.5 w-3.5" />
             <span>{t.centerpiece.focusUzbekistan}</span>
           </Button>
 
@@ -190,83 +214,116 @@ export function MapSection() {
         </div>
       </div>
 
-      {/* Metric Selector Tabs */}
+      {/* Metric Tabs */}
       <MetricSelector
         currentMetric={metric}
         onSelect={(m) => setMetric(m)}
         isLoading={isLoading}
       />
 
-      {/* Main Map / Globe Canvas and Detail Panel */}
-      <div className="relative flex flex-col lg:flex-row items-start gap-6 rounded-3xl border border-border/80 bg-card/40 p-4 sm:p-6 shadow-2xl backdrop-blur-xl overflow-hidden">
-        {/* Visual Viewport Area */}
-        <div className="relative flex-1 w-full min-h-[480px] sm:min-h-[580px] rounded-2xl border border-border/60 bg-background/50 overflow-hidden flex flex-col justify-between">
-          {/* Zoom & Pan Controls (Only active for 2D Map mode) */}
-          {viewMode === "map" && (
-            <div className="absolute top-4 right-4 z-20">
-              <MapControls
-                onZoomIn={handleZoomIn}
-                onZoomOut={handleZoomOut}
-                onReset={handleReset}
+      {/* Main Container: Globe/Map + Desktop Detail Panel */}
+      <div className="editorial-card p-3 sm:p-5 space-y-4">
+        <div className="flex flex-col lg:flex-row items-stretch gap-5">
+          {/* Map / Globe Area */}
+          <div className="relative flex-1 min-w-0 flex flex-col gap-3">
+            {viewMode === "map" && (
+              <div className="absolute top-3.5 right-3.5 z-20">
+                <MapControls
+                  onZoomIn={handleZoomIn}
+                  onZoomOut={handleZoomOut}
+                  onReset={handleReset}
+                />
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+                <span className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => loadMetricData(metric)}
+                  className="h-7 px-2.5 text-xs hover:bg-red-100"
+                >
+                  {t.common.retry}
+                </Button>
+              </div>
+            )}
+
+            {isLoading && !datasetsByMetric[metric] ? (
+              <MapSkeleton />
+            ) : viewMode === "globe" ? (
+              <InteractiveGlobe
+                metric={metric}
+                dataset={currentDataset}
+                selectedIso3={selectedIso3}
+                onSelectCountry={(iso3, name) => loadCountryProfile(iso3, name)}
+                onHoverCountry={(tt) => setTooltip(tt)}
+                externalFocus={externalGlobeFocus}
+                focusCountryIso3={focusCountryTrigger}
               />
+            ) : (
+              <WorldMapSvg
+                metric={metric}
+                dataset={currentDataset}
+                selectedIso3={selectedIso3}
+                onSelectCountry={(iso3, name) => loadCountryProfile(iso3, name)}
+                onHoverCountry={(tt) => setTooltip(tt)}
+                position={position}
+                onMoveEnd={(pos) => setPosition(pos)}
+              />
+            )}
+
+            {/* Legend & Drag Hint */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <ColorLegend metric={metric} />
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 px-1">
+                {t.centerpiece.globeHintDrag}
+              </span>
             </div>
-          )}
+          </div>
 
-          {/* Error notice if API fails */}
-          {error && (
-            <div className="absolute top-4 left-4 z-20 flex items-center gap-2 p-2.5 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-xs">
-              <AlertCircle className="h-4 w-4" />
-              <span>{error}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => loadMetricData(metric)}
-                className="h-6 px-2 text-[11px]"
-              >
-                {t.common.retry}
-              </Button>
-            </div>
-          )}
+          {/* Desktop Side Panel + Mobile Collapsible Analytics Panel */}
+          <div className="lg:hidden">
+            <button
+              type="button"
+              onClick={() => setMobilePanelExpanded((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-blue-50/80 dark:bg-slate-800 border border-blue-200/80 dark:border-slate-700 text-left mb-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-blue-700" />
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  {t.countryPanel.mobileTitle}: {mobileDisplayName}
+                </span>
+              </div>
+              {mobilePanelExpanded ? (
+                <ChevronUp className="h-4 w-4 text-blue-700" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-blue-700" />
+              )}
+            </button>
+            {mobilePanelExpanded && (
+              <CountryDetailPanel
+                country={selectedProfile}
+                onClose={() => setMobilePanelExpanded(false)}
+                isLoading={isProfileLoading}
+              />
+            )}
+          </div>
 
-          {/* Render 3D Earth Globe OR 2D Choropleth Map */}
-          {isLoading && !datasetsByMetric[metric] ? (
-            <MapSkeleton />
-          ) : viewMode === "globe" ? (
-            <InteractiveGlobe
-              metric={metric}
-              dataset={currentDataset}
-              selectedIso3={selectedIso3}
-              onSelectCountry={(iso3, name) => loadCountryProfile(iso3, name)}
-              onHoverCountry={(tt) => setTooltip(tt)}
-              onFocusUzbekistan={handleFocusUzbekistan}
+          <div className="hidden lg:block">
+            <CountryDetailPanel
+              country={selectedProfile}
+              onClose={() => setSelectedProfile(null)}
+              isLoading={isProfileLoading}
             />
-          ) : (
-            <WorldMapSvg
-              metric={metric}
-              dataset={currentDataset}
-              selectedIso3={selectedIso3}
-              onSelectCountry={(iso3, name) => loadCountryProfile(iso3, name)}
-              onHoverCountry={(tt) => setTooltip(tt)}
-              position={position}
-              onMoveEnd={(pos) => setPosition(pos)}
-            />
-          )}
-
-          {/* Color Legend (Bottom Left) */}
-          <div className="relative z-10 p-3 sm:p-4">
-            <ColorLegend metric={metric} />
           </div>
         </div>
-
-        {/* Selected Country Profile Panel */}
-        <CountryDetailPanel
-          country={selectedProfile}
-          onClose={() => setSelectedProfile(null)}
-          isLoading={isProfileLoading}
-        />
       </div>
 
-      {/* Mouse hover tooltip */}
       <MapTooltip tooltip={tooltip} />
     </section>
   );

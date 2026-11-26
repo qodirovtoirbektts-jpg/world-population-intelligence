@@ -489,24 +489,24 @@ export interface WorldBankRegionalItem {
 }
 
 export const VERIFIED_REGIONAL_SNAPSHOT: WorldBankRegionalItem[] = [
-  { code: "EAS", region: "East Asia & Pacific", population: 2388319468, share: 29.3, year: "2024", color: "#3b82f6" },
-  { code: "SAS", region: "South Asia", population: 1677384532, share: 20.6, year: "2024", color: "#10b981" },
-  { code: "SSF", region: "Sub-Saharan Africa", population: 1289936286, share: 15.8, year: "2024", color: "#f59e0b" },
-  { code: "ECS", region: "Europe & Central Asia", population: 928566925, share: 11.4, year: "2024", color: "#8b5cf6" },
-  { code: "MEA", region: "Middle East & North Africa", population: 813173936, share: 10.0, year: "2024", color: "#06b6d4" },
-  { code: "LCN", region: "Latin America & Caribbean", population: 662185614, share: 8.1, year: "2024", color: "#ec4899" },
-  { code: "NAC", region: "North America", population: 381330762, share: 4.7, year: "2024", color: "#f43f5e" },
+  { code: "EAS", region: "East Asia & Pacific", population: 2388319468, share: 29.3, year: "2024", color: "#1e3a8a" },
+  { code: "SAS", region: "South Asia", population: 1677384532, share: 20.6, year: "2024", color: "#1d4ed8" },
+  { code: "SSF", region: "Sub-Saharan Africa", population: 1289936286, share: 15.8, year: "2024", color: "#2563eb" },
+  { code: "ECS", region: "Europe & Central Asia", population: 928566925, share: 11.4, year: "2024", color: "#0284c7" },
+  { code: "MEA", region: "Middle East & North Africa", population: 813173936, share: 10.0, year: "2024", color: "#3b82f6" },
+  { code: "LCN", region: "Latin America & Caribbean", population: 662185614, share: 8.1, year: "2024", color: "#60a5fa" },
+  { code: "NAC", region: "North America", population: 381330762, share: 4.7, year: "2024", color: "#93c5fd" },
 ];
 
 export async function fetchWorldBankRegionalData(): Promise<WorldBankRegionalItem[]> {
   const REGION_COLORS: Record<string, string> = {
-    EAS: "#3b82f6",
-    SAS: "#10b981",
-    SSF: "#f59e0b",
-    ECS: "#8b5cf6",
-    MEA: "#06b6d4",
-    LCN: "#ec4899",
-    NAC: "#f43f5e",
+    EAS: "#1e3a8a",
+    SAS: "#1d4ed8",
+    SSF: "#2563eb",
+    ECS: "#0284c7",
+    MEA: "#3b82f6",
+    LCN: "#60a5fa",
+    NAC: "#93c5fd",
   };
 
   const url = `${WORLD_BANK_BASE_URL}/country/EAS;SAS;SSF;ECS;LCN;MEA;NAC/indicator/SP.POP.TOTL?date=2023:2024&format=json&per_page=50`;

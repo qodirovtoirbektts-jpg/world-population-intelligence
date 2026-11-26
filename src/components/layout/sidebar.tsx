@@ -1,26 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Globe,
   BarChart3,
-  Map,
   GitCompare,
   TrendingUp,
-  Layers,
   ChevronLeft,
   ChevronRight,
-  Database,
   ListOrdered,
-  Sparkles,
+  PieChart,
   ShieldCheck,
-  Compass,
+  MapPin,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
 import { useTranslation } from "@/components/language";
+import { useDashboard } from "@/components/dashboard/dashboard-context";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -38,6 +33,7 @@ export function AppSidebar({
   activeSection,
 }: SidebarProps) {
   const { t, language } = useTranslation();
+  const { focusCountryOnGlobe } = useDashboard();
 
   const navItems = [
     {
@@ -45,99 +41,99 @@ export function AppSidebar({
       label: t.nav.overview,
       href: "#overview",
       icon: BarChart3,
-      badge: "WLD",
-      badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
     },
     {
       id: "map-section",
       label: t.nav.globeMap,
       href: "#map-section",
       icon: Globe,
-      badge: "3D",
-      badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
     },
     {
       id: "compare-section",
       label: t.nav.compare,
       href: "#compare-section",
       icon: GitCompare,
-      badge: "2–5",
-      badgeColor: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     },
     {
       id: "historical-section",
       label: t.nav.historical,
       href: "#historical-section",
       icon: TrendingUp,
-      badge: "1960–24",
-      badgeColor: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    },
+    {
+      id: "regional-section",
+      label: t.nav.regional,
+      href: "#regional-section",
+      icon: PieChart,
     },
     {
       id: "ranking-section",
       label: t.nav.ranking,
       href: "#ranking-section",
       icon: ListOrdered,
-      badge: "Top 20",
-      badgeColor: "bg-purple-500/10 text-purple-500 border-purple-500/20",
     },
     {
-      id: "roadmap-section",
+      id: "methodology-section",
       label: t.nav.roadmap,
-      href: "#roadmap-section",
-      icon: Layers,
+      href: "#methodology-section",
+      icon: ShieldCheck,
     },
   ];
 
+  const handleUzbekistanJump = () => {
+    focusCountryOnGlobe("UZB", "Uzbekistan");
+    onCloseMobile();
+    const el = document.getElementById("map-section");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <>
-      {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden transition-opacity"
           onClick={onCloseMobile}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col border-r border-border/80 bg-card/95 backdrop-blur-xl transition-all duration-300 ease-in-out ${
-          isCollapsed ? "w-[72px]" : "w-[260px]"
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-all duration-300 ease-in-out ${
+          isCollapsed ? "w-[72px]" : "w-[256px]"
         } ${
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
         aria-label="Main Navigation Sidebar"
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between px-3.5 border-b border-border/70">
+        <div className="flex h-16 items-center justify-between px-3.5 border-b border-slate-200/80 dark:border-slate-800">
           <Link
             href="/"
-            className="flex items-center gap-3 overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+            className="flex items-center gap-3 overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-lg"
             onClick={onCloseMobile}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-blue-600 to-indigo-700 text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <Globe className="h-5 w-5 animate-pulse" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white shadow-sm">
+              <Globe className="h-5 w-5" />
             </div>
 
             {!isCollapsed && (
               <div className="flex flex-col min-w-0">
-                <span className="font-extrabold tracking-tight text-sm text-foreground truncate">
-                  WORLD POPULATION
+                <span className="font-bold tracking-tight text-sm text-slate-900 dark:text-slate-100 truncate">
+                  {t.nav.siteName}
                 </span>
-                <span className="text-[10px] font-mono tracking-wider text-primary font-semibold truncate">
-                  INTELLIGENCE
+                <span className="text-[11px] text-blue-700 dark:text-blue-400 font-medium truncate">
+                  {t.nav.siteSub}
                 </span>
               </div>
             )}
           </Link>
 
-          {/* Desktop Collapse Toggle Button */}
           {!isCollapsed && (
             <Button
               variant="ghost"
               size="icon"
               onClick={onToggleCollapse}
-              className="hidden lg:flex h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-lg"
+              className="hidden lg:flex h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
@@ -146,14 +142,13 @@ export function AppSidebar({
           )}
         </div>
 
-        {/* Collapsed Rail Toggle Button */}
         {isCollapsed && (
-          <div className="hidden lg:flex justify-center py-2 border-b border-border/50">
+          <div className="hidden lg:flex justify-center py-2 border-b border-slate-200/80 dark:border-slate-800">
             <Button
               variant="ghost"
               size="icon"
               onClick={onToggleCollapse}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-lg"
+              className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
               title="Expand sidebar"
               aria-label="Expand sidebar"
             >
@@ -162,12 +157,16 @@ export function AppSidebar({
           </div>
         )}
 
-        {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-2 py-4 space-y-6">
+        {/* Navigation Links */}
+        <div className="flex-1 overflow-y-auto px-2.5 py-4 space-y-6">
           <div className="space-y-1">
             {!isCollapsed && (
-              <div className="px-3 pb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                {language === "uz" ? "Modullar va Tahlil" : language === "ru" ? "Модули и Аналитика" : "Analytics & Modules"}
+              <div className="px-3 pb-1.5 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+                {language === "uz"
+                  ? "Bo‘limlar"
+                  : language === "ru"
+                  ? "Разделы"
+                  : "Sections"}
               </div>
             )}
 
@@ -180,85 +179,69 @@ export function AppSidebar({
                   key={item.id}
                   href={item.href}
                   onClick={onCloseMobile}
-                  className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium transition-all ${
+                  className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors ${
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25 font-semibold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                      ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200/80 dark:border-blue-800"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-900"
                   }`}
                   title={isCollapsed ? item.label : undefined}
                 >
                   <Icon
-                    className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-110 ${
-                      isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    className={`h-4 w-4 shrink-0 ${
+                      isActive
+                        ? "text-blue-700 dark:text-blue-300"
+                        : "text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200"
                     }`}
                   />
-
-                  {!isCollapsed && (
-                    <span className="truncate flex-1">{item.label}</span>
-                  )}
-
-                  {!isCollapsed && item.badge && (
-                    <span
-                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md border font-medium ${
-                        isActive
-                          ? "bg-white/20 text-white border-white/30"
-                          : item.badgeColor
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               );
             })}
           </div>
 
-          {/* Quick Benchmark Focus Widget */}
+          {/* Uzbekistan Quick Focus Widget */}
           {!isCollapsed && (
-            <div className="p-3 mx-1 rounded-xl border border-border/70 bg-secondary/30 space-y-2">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-foreground">
+            <div className="p-3.5 mx-0.5 rounded-2xl border border-blue-100 dark:border-slate-800 bg-blue-50/60 dark:bg-slate-900 space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-900 dark:text-slate-100">
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                  <MapPin className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
                   {t.common.featured}
                 </span>
-                <span className="text-xs">🇺🇿</span>
+                <span className="text-[11px] font-mono text-blue-700 dark:text-blue-300">UZB</span>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                 {language === "uz"
-                  ? "O'zbekiston (Markaziy Osiyo) rasmiy Jahon Banki demografik ko'rsatkichlari."
+                  ? "O‘zbekistonning aholi soni, zichligi va tarixiy dinamikasini globusda ochish."
                   : language === "ru"
-                  ? "Узбекистан (Центральная Азия) подтвержденные демографические показатели."
-                  : "Uzbekistan (Central Asia) verified World Bank demographic baseline."}
+                  ? "Открыть демографический профиль Узбекистана на 3D-глобусе."
+                  : "Focus Uzbekistan's live World Bank profile directly on the 3D globe."}
               </p>
-              <a
-                href="#map-section"
-                className="inline-flex w-full items-center justify-center gap-1 text-[11px] font-medium text-primary hover:underline pt-1"
-                onClick={onCloseMobile}
+              <button
+                type="button"
+                onClick={handleUzbekistanJump}
+                className="w-full py-1.5 px-2.5 rounded-lg bg-white dark:bg-slate-800 border border-blue-200 dark:border-slate-700 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-700 hover:text-white transition-colors"
               >
                 {t.centerpiece.focusUzbekistan} →
-              </a>
+              </button>
             </div>
           )}
         </div>
 
-        {/* Footer Telemetry */}
-        <div className="p-3 border-t border-border/70 space-y-2">
+        {/* Footer Data Status */}
+        <div className="p-3.5 border-t border-slate-200/80 dark:border-slate-800">
           {!isCollapsed ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  World Bank Online
-                </span>
-                <span className="text-[10px] text-emerald-400 font-semibold">24h ISR</span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+                <span className="h-2 w-2 rounded-full bg-blue-600" />
+                <span>{t.nav.liveBadge}</span>
               </div>
-              <div className="text-[10px] text-muted-foreground/80 truncate">
-                Zero Mock • WCAG 2.1 AA
-              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                {t.common.worldBankWdi}
+              </p>
             </div>
           ) : (
-            <div className="flex justify-center" title="World Bank Connected (24h ISR)">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex justify-center" title={t.nav.liveBadge}>
+              <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
             </div>
           )}
         </div>

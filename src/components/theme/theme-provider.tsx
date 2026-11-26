@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "dark" | "light";
+type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
@@ -11,14 +11,14 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "dark",
+  theme: "light",
   setTheme: () => {},
   toggleTheme: () => {},
 });
 
 export function ThemeProvider({
   children,
-  defaultTheme = "dark",
+  defaultTheme = "light",
   storageKey = "wpi-ui-theme",
 }: {
   children: React.ReactNode;
@@ -26,24 +26,17 @@ export function ThemeProvider({
   storageKey?: string;
 }) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(storageKey) as Theme | null;
-      if (stored === "dark" || stored === "light") {
-        setThemeState(stored);
-        applyTheme(stored);
-      } else {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const initialTheme: Theme = prefersDark ? "dark" : "light";
-        setThemeState(initialTheme);
-        applyTheme(initialTheme);
-      }
+      const initialTheme: Theme =
+        stored === "dark" || stored === "light" ? stored : defaultTheme;
+      setThemeState(initialTheme);
+      applyTheme(initialTheme);
     } catch {
       applyTheme(defaultTheme);
     }
-    setMounted(true);
   }, [defaultTheme, storageKey]);
 
   const applyTheme = (t: Theme) => {
@@ -61,8 +54,7 @@ export function ThemeProvider({
   };
 
   const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   return (

@@ -37,7 +37,6 @@ export function ExportDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -48,7 +47,6 @@ export function ExportDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       setIsOpen(false);
@@ -64,13 +62,11 @@ export function ExportDropdown({
         exportComparisonSummaryCsv(profiles);
         setSuccessType("comparison");
         setTimeout(() => setSuccessType(null), 2500);
-      } catch (err) {
-        console.error("CSV Export failed:", err);
       } finally {
         setDownloadingType(null);
         setIsOpen(false);
       }
-    }, 250);
+    }, 150);
   };
 
   const handleExportHistorical = () => {
@@ -81,13 +77,11 @@ export function ExportDropdown({
         exportHistoricalTimeSeriesCsv(profiles, historical);
         setSuccessType("historical");
         setTimeout(() => setSuccessType(null), 2500);
-      } catch (err) {
-        console.error("CSV Export failed:", err);
       } finally {
         setDownloadingType(null);
         setIsOpen(false);
       }
-    }, 350);
+    }, 150);
   };
 
   const handleExportMap = () => {
@@ -98,13 +92,11 @@ export function ExportDropdown({
         exportMapDatasetCsv(mapDataset, activeMapMetric);
         setSuccessType("map");
         setTimeout(() => setSuccessType(null), 2500);
-      } catch (err) {
-        console.error("CSV Export failed:", err);
       } finally {
         setDownloadingType(null);
         setIsOpen(false);
       }
-    }, 350);
+    }, 150);
   };
 
   const hasComparisonData = profiles.length > 0;
@@ -112,8 +104,11 @@ export function ExportDropdown({
   const hasMapData = Boolean(mapDataset && Object.keys(mapDataset).length > 0);
 
   return (
-    <div ref={dropdownRef} className={`relative inline-block text-left ${className}`} onKeyDown={handleKeyDown}>
-      {/* Trigger Button */}
+    <div
+      ref={dropdownRef}
+      className={`relative inline-block text-left ${className}`}
+      onKeyDown={handleKeyDown}
+    >
       <Button
         ref={buttonRef}
         type="button"
@@ -121,115 +116,105 @@ export function ExportDropdown({
         size="sm"
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        aria-label="Export demographic data to CSV"
+        aria-label={t.export.buttonLabel}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="h-9 px-3 gap-2 border-border/80 bg-secondary/40 hover:bg-secondary/80 text-foreground font-medium text-xs rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-all"
+        className="h-9 px-3 gap-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium text-xs rounded-xl shadow-sm focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none transition-all"
       >
-        <Download className="h-3.5 w-3.5 text-blue-400" aria-hidden="true" />
+        <Download className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" aria-hidden="true" />
         <span>{t.export.buttonLabel}</span>
-        <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+        <ChevronDown
+          className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          aria-hidden="true"
+        />
       </Button>
 
-      {/* Dropdown Menu */}
       {isOpen && (
         <div
           role="menu"
           aria-orientation="vertical"
           aria-label="CSV Export Options"
-          className="absolute right-0 z-50 mt-2 w-80 sm:w-96 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-2xl p-2.5 space-y-1.5 focus:outline-none animate-in fade-in-0 zoom-in-95 duration-150"
+          className="absolute right-0 z-50 mt-2 w-72 sm:w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl p-2 space-y-1 animate-in fade-in-0 zoom-in-95 duration-150"
         >
-          {/* Header */}
-          <div className="px-3 py-2 border-b border-border/60">
-            <p className="text-xs font-semibold text-foreground">
+          <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
               {t.export.buttonLabel}
             </p>
-            <p className="text-[11px] text-muted-foreground">
-              {t.common.officialFeed}
-            </p>
+            <p className="text-[11px] text-slate-500">{t.common.officialFeed}</p>
           </div>
 
           <div className="space-y-1 pt-1">
-            {/* 1. Comparison Summary */}
             {(variant === "comparison" || variant === "all") && (
               <button
                 type="button"
                 role="menuitem"
                 disabled={!hasComparisonData || downloadingType === "comparison"}
                 onClick={handleExportComparison}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/60 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed group focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 transition-colors shrink-0 mt-0.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-700 shrink-0">
                     <FileSpreadsheet className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-foreground">
+                    <div className="text-xs font-medium text-slate-900 dark:text-slate-100">
                       {t.export.comparisonSummary}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {profiles.length} countries • 4 World Bank indicators
+                    <div className="text-[11px] text-slate-500">
+                      {profiles.length} • 4 WDI
                     </div>
                   </div>
                 </div>
-                {successType === "comparison" && (
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                )}
+                {successType === "comparison" && <Check className="h-4 w-4 text-blue-700 shrink-0" />}
               </button>
             )}
 
-            {/* 2. Historical Time Series */}
             {(variant === "comparison" || variant === "all") && (
               <button
                 type="button"
                 role="menuitem"
                 disabled={!hasHistoricalData || downloadingType === "historical"}
                 onClick={handleExportHistorical}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/60 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed group focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20 transition-colors shrink-0 mt-0.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-700 shrink-0">
                     <History className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-foreground">
+                    <div className="text-xs font-medium text-slate-900 dark:text-slate-100">
                       {t.export.historicalSeries}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      1960–2024 time series • {profiles.length} countries
-                    </div>
+                    <div className="text-[11px] text-slate-500">1960–2024 • CSV</div>
                   </div>
                 </div>
-                {successType === "historical" && (
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                )}
+                {successType === "historical" && <Check className="h-4 w-4 text-blue-700 shrink-0" />}
               </button>
             )}
 
-            {/* 3. Global Map Dataset */}
             {(variant === "map" || variant === "all") && (
               <button
                 type="button"
                 role="menuitem"
                 disabled={!hasMapData || downloadingType === "map"}
                 onClick={handleExportMap}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-secondary/60 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed group focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+                className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors shrink-0 mt-0.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-700 shrink-0">
                     <Globe2 className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-medium text-foreground">
+                    <div className="text-xs font-medium text-slate-900 dark:text-slate-100">
                       {t.export.mapDataset}
                     </div>
-                    <div className="text-[11px] text-muted-foreground font-mono">
-                      {activeMapMetric} • 177 sovereign nations
+                    <div className="text-[11px] text-slate-500 font-mono">
+                      {activeMapMetric}
                     </div>
                   </div>
                 </div>
-                {successType === "map" && (
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                )}
+                {successType === "map" && <Check className="h-4 w-4 text-blue-700 shrink-0" />}
               </button>
             )}
           </div>

@@ -1,1 +1,2 @@
-export { InteractiveGlobe } from "./interactive-globe";
+export { InteractiveGlobe, getCartographicFillColor } from "./interactive-globe";
+export type { GlobeExternalFocus } from "./interactive-globe";

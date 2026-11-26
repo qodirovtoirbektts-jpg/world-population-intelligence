@@ -25,8 +25,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CountryComparisonProfile, HistoricalYearPoint, ComparisonTab } from "@/types/comparison";
 import { DemographicIndicatorCode } from "@/types/world-bank";
-import { INDICATORS, formatIndicatorValue } from "@/lib/world-bank";
+import { formatIndicatorValue } from "@/lib/world-bank";
 import { downloadCsv, escapeCsvField } from "@/lib/csv-export";
+import { getLocalizedCountryName } from "@/lib/country-names";
 import { useTranslation } from "@/components/language";
 
 interface HistoricalChartProps {
@@ -37,7 +38,7 @@ interface HistoricalChartProps {
 type ChartVisualizationMode = "line" | "area" | "bar";
 
 export function HistoricalChart({ profiles, historical }: HistoricalChartProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [activeTab, setActiveTab] = useState<ComparisonTab>("SP.POP.TOTL");
   const [startYear, setStartYear] = useState<number>(1960);
   const [chartMode, setChartMode] = useState<ChartVisualizationMode>("area");
@@ -49,13 +50,11 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
     setIsMounted(true);
   }, []);
 
-  // Filter historical points by startYear
   const filteredData = useMemo(() => {
     const raw = historical[activeTab] || [];
     return raw.filter((d) => d.year >= startYear);
   }, [historical, activeTab, startYear]);
 
-  // Toggle country visibility on legend click
   const toggleCountryVisibility = (iso3: string) => {
     setHiddenCountries((prev) => ({
       ...prev,
@@ -63,7 +62,15 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
     }));
   };
 
-  // Format axis ticks
+  const activeTabLabel =
+    activeTab === "SP.POP.TOTL"
+      ? t.centerpiece.tabPop
+      : activeTab === "EN.POP.DNST"
+      ? t.centerpiece.tabDnst
+      : activeTab === "SP.POP.GROW"
+      ? t.centerpiece.tabGrow
+      : t.centerpiece.tabUrb;
+
   const formatYAxisTick = (val: number) => {
     if (activeTab === "SP.POP.TOTL") {
       if (val >= 1_000_000_000) return `${(val / 1_000_000_000).toFixed(1)}B`;
@@ -71,39 +78,39 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
       if (val >= 1_000) return `${(val / 1_000).toFixed(0)}K`;
       return String(val);
     }
-    if (activeTab === "SP.POP.GROW") {
-      return `${val.toFixed(1)}%`;
-    }
-    if (activeTab === "SP.URB.TOTL.IN.ZS") {
-      return `${val.toFixed(0)}%`;
-    }
-    if (activeTab === "EN.POP.DNST") {
-      return `${val.toFixed(0)}`;
-    }
+    if (activeTab === "SP.POP.GROW") return `${val.toFixed(1)}%`;
+    if (activeTab === "SP.URB.TOTL.IN.ZS") return `${val.toFixed(0)}%`;
+    if (activeTab === "EN.POP.DNST") return `${val.toFixed(0)}`;
     return String(val);
   };
 
-  // Direct CSV Export of active series
   const handleExportSeriesCsv = () => {
-    const headers = ["Year", ...profiles.map((p) => `${escapeCsvField(p.name)} (${p.iso3})`)];
+    const headers = [
+      "Year",
+      ...profiles.map((p) => `${p.name} (${p.iso3})`),
+    ];
     const rows = filteredData.map((pt) => [
       pt.year,
-      ...profiles.map((p) => (pt[p.iso3] !== null && pt[p.iso3] !== undefined ? pt[p.iso3] : "")),
+      ...profiles.map((p) => escapeCsvField(pt[p.iso3] ?? "")),
     ]);
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
-    downloadCsv(`historical_${activeTab}_${startYear}-2024.csv`, csvContent);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+    downloadCsv(
+      `world-population-historical_${startYear}-2024_${new Date().toISOString().split("T")[0]}.csv`,
+      csv
+    );
   };
 
-  // Custom Recharts Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
 
     return (
-      <div className="rounded-xl border border-border/90 bg-card/95 backdrop-blur-xl p-3.5 shadow-2xl text-xs space-y-2 min-w-[210px]">
-        <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-          <span className="font-semibold text-foreground">{t.historical.yearLabel} {label}</span>
-          <span className="font-mono text-[10px] text-muted-foreground">
-            {INDICATORS[activeTab].name}
+      <div className="rounded-xl border border-blue-200 dark:border-slate-700 bg-white/98 dark:bg-slate-900/95 p-3.5 shadow-xl text-xs space-y-2 min-w-[210px]">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+          <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+            {t.historical.yearLabel}: {label}
+          </span>
+          <span className="text-[11px] font-medium text-blue-700 dark:text-blue-300">
+            {activeTabLabel}
           </span>
         </div>
 
@@ -112,6 +119,11 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
             const iso3 = entry.dataKey;
             const profile = profiles.find((p) => p.iso3 === iso3);
             const val = entry.value;
+            const displayName = getLocalizedCountryName(
+              iso3,
+              profile?.name || iso3,
+              language
+            );
 
             return (
               <div key={iso3} className="flex items-center justify-between gap-3">
@@ -120,11 +132,11 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
                     className="h-2.5 w-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="font-medium text-foreground">
-                    {profile?.name || iso3}
+                  <span className="font-medium text-slate-800 dark:text-slate-200">
+                    {displayName}
                   </span>
                 </div>
-                <span className="font-mono font-semibold text-foreground">
+                <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
                   {val !== null && val !== undefined
                     ? formatIndicatorValue(activeTab, val)
                     : t.common.na}
@@ -138,137 +150,137 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
   };
 
   return (
-    <Card className="border-border/80 bg-card/50 backdrop-blur-xl shadow-xl">
-      <CardHeader className="border-b border-border/40 pb-4">
+    <Card
+      id="historical-section"
+      className="editorial-card bg-white dark:bg-slate-900 overflow-hidden scroll-mt-20"
+    >
+      <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-xs font-mono">
+              <Badge
+                variant="outline"
+                className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[11px] font-semibold"
+              >
                 {t.historical.badge}
               </Badge>
-              <Badge variant="outline" className="font-mono text-[10px] text-muted-foreground">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 {t.historical.authenticatedBadge}
-              </Badge>
+              </span>
             </div>
-            <CardTitle className="text-lg sm:text-xl font-bold text-foreground">
+            <CardTitle className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
               {t.historical.title}
             </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-0.5">
+            <CardDescription className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {t.historical.subtitle}
             </CardDescription>
           </div>
 
-          {/* Interactive Mode & Timeline Switchers */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Chart Mode */}
-            <div className="flex items-center p-0.5 rounded-xl bg-secondary/50 border border-border/60 text-xs">
+            <div className="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
               <button
+                type="button"
                 onClick={() => setChartMode("area")}
                 className={`p-1.5 rounded-lg transition-all ${
                   chartMode === "area"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-white dark:bg-slate-900 text-blue-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
                 title={t.historical.modeArea}
+                aria-label={t.historical.modeArea}
               >
                 <AreaIcon className="h-3.5 w-3.5" />
               </button>
               <button
+                type="button"
                 onClick={() => setChartMode("line")}
                 className={`p-1.5 rounded-lg transition-all ${
                   chartMode === "line"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-white dark:bg-slate-900 text-blue-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
                 title={t.historical.modeLine}
+                aria-label={t.historical.modeLine}
               >
                 <LineIcon className="h-3.5 w-3.5" />
               </button>
               <button
+                type="button"
                 onClick={() => setChartMode("bar")}
                 className={`p-1.5 rounded-lg transition-all ${
                   chartMode === "bar"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-white dark:bg-slate-900 text-blue-700 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
                 title={t.historical.modeBar}
+                aria-label={t.historical.modeBar}
               >
                 <BarIcon className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            {/* Scale toggle (Linear / Logarithmic) */}
-            <div className="flex items-center p-0.5 rounded-xl bg-secondary/50 border border-border/60 text-xs font-mono">
+            {/* Linear / Log Scale */}
+            <div className="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
               <button
+                type="button"
                 onClick={() => setScaleType("linear")}
-                className={`px-2 py-1 rounded-lg transition-all text-[11px] ${
+                className={`px-2.5 py-1 rounded-lg transition-all text-[11px] ${
                   scaleType === "linear"
-                    ? "bg-card text-foreground shadow-sm font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-white dark:bg-slate-900 text-blue-700 shadow-sm font-semibold"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 {t.historical.scaleLinear}
               </button>
               <button
+                type="button"
                 onClick={() => setScaleType("log")}
-                className={`px-2 py-1 rounded-lg transition-all text-[11px] ${
+                className={`px-2.5 py-1 rounded-lg transition-all text-[11px] ${
                   scaleType === "log"
-                    ? "bg-card text-foreground shadow-sm font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-white dark:bg-slate-900 text-blue-700 shadow-sm font-semibold"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 {t.historical.scaleLog}
               </button>
             </div>
 
-            {/* Timeline Filter Pills */}
-            <div className="flex items-center p-0.5 rounded-xl bg-secondary/50 border border-border/60 text-xs font-mono">
-              <button
-                onClick={() => setStartYear(1960)}
-                className={`px-2.5 py-1 rounded-lg transition-all text-[11px] ${
-                  startYear === 1960
-                    ? "bg-card text-foreground shadow-sm font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.historical.filterAll}
-              </button>
-              <button
-                onClick={() => setStartYear(1990)}
-                className={`px-2.5 py-1 rounded-lg transition-all text-[11px] ${
-                  startYear === 1990
-                    ? "bg-card text-foreground shadow-sm font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.historical.filterModern}
-              </button>
-              <button
-                onClick={() => setStartYear(2010)}
-                className={`px-2.5 py-1 rounded-lg transition-all text-[11px] ${
-                  startYear === 2010
-                    ? "bg-card text-foreground shadow-sm font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.historical.filterRecent}
-              </button>
+            {/* Time Span */}
+            <div className="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+              {[
+                { yr: 1960, label: t.historical.filterAll },
+                { yr: 1990, label: t.historical.filterModern },
+                { yr: 2010, label: t.historical.filterRecent },
+              ].map((item) => (
+                <button
+                  key={item.yr}
+                  type="button"
+                  onClick={() => setStartYear(item.yr)}
+                  className={`px-2.5 py-1 rounded-lg transition-all text-[11px] tabular-nums ${
+                    startYear === item.yr
+                      ? "bg-white dark:bg-slate-900 text-blue-700 shadow-sm font-semibold"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
 
-            {/* Quick CSV Export */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleExportSeriesCsv}
-              className="h-8 px-2.5 rounded-xl border-border/80 text-xs gap-1.5"
+              className="h-8 px-2.5 rounded-xl border-slate-200 dark:border-slate-700 text-xs gap-1.5 text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />
+              <FileSpreadsheet className="h-3.5 w-3.5 text-blue-700" />
               <span className="hidden sm:inline">{t.historical.exportCsv}</span>
             </Button>
           </div>
         </div>
 
-        {/* Tab Pills for 4 Core Indicators */}
+        {/* Indicator Tabs */}
         <div className="flex flex-wrap gap-2 pt-3">
           {(
             [
@@ -280,11 +292,12 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
           ).map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
                 activeTab === tab.id
-                  ? "bg-primary text-primary-foreground font-semibold shadow-md shadow-primary/20"
-                  : "bg-secondary/40 text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                  ? "bg-blue-700 text-white font-semibold shadow-sm"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-700"
               }`}
             >
               {tab.label}
@@ -294,10 +307,9 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
       </CardHeader>
 
       <CardContent className="pt-6">
-        {/* Interactive Chart Container */}
-        <div className="h-[380px] sm:h-[440px] w-full">
+        <div className="h-[340px] sm:h-[420px] w-full">
           {!isMounted ? (
-            <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
+            <div className="h-full w-full flex items-center justify-center text-xs text-slate-500">
               {t.common.loading}
             </div>
           ) : (
@@ -305,7 +317,7 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
               {chartMode === "area" ? (
                 <AreaChart
                   data={filteredData}
-                  margin={{ top: 10, right: 20, left: 20, bottom: 20 }}
+                  margin={{ top: 10, right: 16, left: 10, bottom: 16 }}
                 >
                   <defs>
                     {profiles.map((p) => (
@@ -317,23 +329,23 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
                         x2="0"
                         y2="1"
                       >
-                        <stop offset="5%" stopColor={p.color} stopOpacity={0.4} />
-                        <stop offset="95%" stopColor={p.color} stopOpacity={0.0} />
+                        <stop offset="5%" stopColor={p.color} stopOpacity={0.22} />
+                        <stop offset="95%" stopColor={p.color} stopOpacity={0.01} />
                       </linearGradient>
                     ))}
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
                     dataKey="year"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={{ stroke: "#cbd5e1" }}
                   />
                   <YAxis
                     scale={scaleType}
                     domain={scaleType === "log" ? ["auto", "auto"] : [0, "auto"]}
                     tickFormatter={formatYAxisTick}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={{ stroke: "#cbd5e1" }}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {profiles.map((p) =>
@@ -343,10 +355,10 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
                         type="monotone"
                         dataKey={p.iso3}
                         stroke={p.color}
-                        strokeWidth={2}
+                        strokeWidth={2.25}
                         fill={`url(#grad-${p.iso3})`}
                         dot={false}
-                        activeDot={{ r: 5, fill: p.color, stroke: "#ffffff", strokeWidth: 1.5 }}
+                        activeDot={{ r: 5, fill: p.color, stroke: "#ffffff", strokeWidth: 2 }}
                       />
                     )
                   )}
@@ -354,20 +366,20 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
               ) : chartMode === "line" ? (
                 <LineChart
                   data={filteredData}
-                  margin={{ top: 10, right: 20, left: 20, bottom: 20 }}
+                  margin={{ top: 10, right: 16, left: 10, bottom: 16 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
                     dataKey="year"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={{ stroke: "#cbd5e1" }}
                   />
                   <YAxis
                     scale={scaleType}
                     domain={scaleType === "log" ? ["auto", "auto"] : [0, "auto"]}
                     tickFormatter={formatYAxisTick}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={{ stroke: "#cbd5e1" }}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {profiles.map((p) =>
@@ -379,26 +391,28 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
                         stroke={p.color}
                         strokeWidth={2.5}
                         dot={false}
-                        activeDot={{ r: 5, fill: p.color, stroke: "#ffffff", strokeWidth: 1.5 }}
+                        activeDot={{ r: 5, fill: p.color, stroke: "#ffffff", strokeWidth: 2 }}
                       />
                     )
                   )}
                 </LineChart>
               ) : (
                 <BarChart
-                  data={filteredData.filter((_, idx) => idx % 5 === 0 || idx === filteredData.length - 1)}
-                  margin={{ top: 10, right: 20, left: 20, bottom: 20 }}
+                  data={filteredData.filter(
+                    (_, idx) => idx % 5 === 0 || idx === filteredData.length - 1
+                  )}
+                  margin={{ top: 10, right: 16, left: 10, bottom: 16 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
                     dataKey="year"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={{ stroke: "#cbd5e1" }}
                   />
                   <YAxis
                     tickFormatter={formatYAxisTick}
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={{ stroke: "#cbd5e1" }}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {profiles.map((p) =>
@@ -417,29 +431,33 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
           )}
         </div>
 
-        {/* Interactive Custom Legend (Click to Hide/Show Country Series) */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-border/40">
-          <span className="text-[11px] text-muted-foreground font-mono">
+        {/* Custom Interactive Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
             {t.historical.toggleVisibility}
           </span>
           {profiles.map((p) => {
             const isHidden = hiddenCountries[p.iso3];
+            const displayName = getLocalizedCountryName(p.iso3, p.name, language);
             return (
               <button
                 key={p.iso3}
+                type="button"
                 onClick={() => toggleCountryVisibility(p.iso3)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs border transition-all ${
                   isHidden
-                    ? "opacity-40 border-dashed border-border/80 bg-secondary/20 line-through"
-                    : "border-border/80 bg-secondary/40 hover:bg-secondary/80 font-medium"
+                    ? "opacity-45 border-dashed border-slate-300 bg-slate-50 line-through"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-blue-50 font-medium"
                 }`}
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: p.color }}
                 />
-                <span className="text-foreground">{p.flag} {p.name}</span>
-                <span className="font-mono text-[10px] text-muted-foreground">({p.iso3})</span>
+                <span className="text-slate-900 dark:text-slate-100">
+                  {p.flag} {displayName}
+                </span>
+                <span className="font-mono text-[10px] text-slate-400">{p.iso3}</span>
               </button>
             );
           })}

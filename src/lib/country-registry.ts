@@ -1,11 +1,12 @@
 import { CountryListItem } from "@/types/comparison";
+import { matchesLocalizedCountry } from "./country-names";
 
 export const COMPARISON_PALETTE = [
-  { hex: "#3b82f6", name: "Blue", class: "text-blue-400 border-blue-500 bg-blue-500/10" },
-  { hex: "#10b981", name: "Emerald", class: "text-emerald-400 border-emerald-500 bg-emerald-500/10" },
-  { hex: "#f59e0b", name: "Amber", class: "text-amber-400 border-amber-500 bg-amber-500/10" },
-  { hex: "#a855f7", name: "Purple", class: "text-purple-400 border-purple-500 bg-purple-500/10" },
-  { hex: "#f43f5e", name: "Rose", class: "text-rose-400 border-rose-500 bg-rose-500/10" },
+  { hex: "#1d4ed8", name: "Cobalt", class: "text-blue-700 border-blue-600 bg-blue-50" },
+  { hex: "#0284c7", name: "Ocean", class: "text-sky-700 border-sky-600 bg-sky-50" },
+  { hex: "#0f766e", name: "Teal", class: "text-teal-700 border-teal-600 bg-teal-50" },
+  { hex: "#4f46e5", name: "Indigo", class: "text-indigo-700 border-indigo-600 bg-indigo-50" },
+  { hex: "#b45309", name: "Amber", class: "text-amber-700 border-amber-600 bg-amber-50" },
 ];
 
 export const ALL_COUNTRIES: CountryListItem[] = [
@@ -60,6 +61,7 @@ export const ALL_COUNTRIES: CountryListItem[] = [
   { iso3: "IRL", name: "Ireland", region: "Europe", flag: "🇮🇪" },
   { iso3: "ISR", name: "Israel", region: "Middle East", flag: "🇮🇱" },
   { iso3: "KOR", name: "South Korea", region: "East Asia", flag: "🇰🇷" },
+  { iso3: "LUX", name: "Luxembourg", region: "Europe", flag: "🇱🇺" },
   { iso3: "MYS", name: "Malaysia", region: "East Asia & Pacific", flag: "🇲🇾" },
   { iso3: "NLD", name: "Netherlands", region: "Europe", flag: "🇳🇱" },
   { iso3: "NZL", name: "New Zealand", region: "East Asia & Pacific", flag: "🇳🇿" },
@@ -81,13 +83,10 @@ export function findCountryByIso3(iso3: string): CountryListItem | undefined {
 }
 
 export function searchCountries(query: string): CountryListItem[] {
-  const clean = query.trim().toLowerCase();
+  const clean = query.trim();
   if (!clean) return ALL_COUNTRIES.slice(0, 10);
 
-  return ALL_COUNTRIES.filter(
-    (c) =>
-      c.iso3.toLowerCase().includes(clean) ||
-      c.name.toLowerCase().includes(clean) ||
-      c.region.toLowerCase().includes(clean)
+  return ALL_COUNTRIES.filter((c) =>
+    matchesLocalizedCountry(c.iso3, c.name, c.region, clean)
   );
 }

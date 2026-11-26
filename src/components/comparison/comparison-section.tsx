@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { GitCompare, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CountrySelector } from "./country-selector";
@@ -9,73 +9,64 @@ import { HistoricalChart } from "./historical-chart";
 import { ExportDropdown } from "@/components/export";
 import { generateComparisonDataset } from "@/lib/historical-data";
 import { useTranslation } from "@/components/language";
+import { useDashboard } from "@/components/dashboard/dashboard-context";
 
 export function ComparisonSection() {
   const { t } = useTranslation();
-  // Default benchmark: Uzbekistan vs United States vs China
-  const [selectedCodes, setSelectedCodes] = useState<string[]>(["UZB", "USA", "CHN"]);
+  const { comparisonCodes, setComparisonCodes } = useDashboard();
 
-  // Compile comparison profiles and historical series dynamically
   const comparisonData = useMemo(() => {
-    return generateComparisonDataset(selectedCodes);
-  }, [selectedCodes]);
+    return generateComparisonDataset(comparisonCodes);
+  }, [comparisonCodes]);
 
   const { profiles, historical } = comparisonData;
 
   return (
     <section id="compare-section" className="space-y-6 scroll-mt-20">
-      {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Badge
-              variant="default"
-              className="bg-indigo-600 hover:bg-indigo-500 gap-1.5 py-0.5 px-2.5 text-xs"
-            >
-              <GitCompare className="h-3.5 w-3.5" />
-              {t.comparison.badge}
-            </Badge>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge
               variant="outline"
-              className="border-border text-xs text-muted-foreground font-mono"
+              className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[11px] font-semibold gap-1.5"
             >
-              {t.comparison.subBadge}
+              <GitCompare className="h-3 w-3" />
+              {t.comparison.badge}
             </Badge>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {t.comparison.subBadge}
+            </span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <GitCompare className="h-6 w-6 text-indigo-400" />
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t.comparison.title}
           </h2>
-          <p className="text-sm text-muted-foreground max-w-2xl mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
             {t.comparison.subtitle}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-end">
           <ExportDropdown
             profiles={profiles}
             historical={historical}
             variant="comparison"
           />
-          <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground bg-secondary/30 px-3 py-1.5 rounded-xl border border-border/60">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            <span className="hidden sm:inline">{t.comparison.zeroFabricated}</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
+            <span className="hidden sm:inline font-medium">{t.comparison.zeroFabricated}</span>
           </div>
         </div>
       </div>
 
-      {/* 1. Country Selection Interface */}
-      <div className="rounded-2xl border border-border/80 bg-card/40 backdrop-blur-xl p-5 shadow-lg space-y-4">
+      <div className="editorial-card p-4 sm:p-5 bg-white dark:bg-slate-900">
         <CountrySelector
-          selectedCodes={selectedCodes}
-          onChange={setSelectedCodes}
+          selectedCodes={comparisonCodes}
+          onChange={setComparisonCodes}
         />
       </div>
 
-      {/* 2. Side-by-Side KPI Comparison Cards (4 Indicators) */}
       <MetricComparisonCards profiles={profiles} />
 
-      {/* 3. Dynamic Historical Trends & Multi-Line Curves (1960 - 2024) */}
       <HistoricalChart profiles={profiles} historical={historical} />
     </section>
   );

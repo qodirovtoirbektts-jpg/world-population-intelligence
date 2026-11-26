@@ -1,29 +1,28 @@
+"use client";
+
 import { Loader2, Globe } from "lucide-react";
+import { useTranslation } from "@/components/language";
 
 export function MapSkeleton() {
-  return (
-    <div id="map-section" className="relative w-full h-[540px] sm:h-[620px] rounded-3xl border border-border/80 bg-card/40 flex flex-col items-center justify-center p-8 backdrop-blur-md overflow-hidden scroll-mt-20">
-      {/* Background glowing radar circles */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-        <div className="h-96 w-96 rounded-full border border-blue-500 animate-ping" />
-        <div className="absolute h-[500px] w-[500px] rounded-full border border-indigo-500" />
-      </div>
+  const { t } = useTranslation();
 
+  return (
+    <div className="relative w-full h-[460px] sm:h-[580px] lg:h-[630px] rounded-2xl border border-blue-200/80 dark:border-blue-900/40 bg-[radial-gradient(circle_at_50%_45%,#ffffff_0%,#eef5ff_62%,#e0ecff_100%)] dark:bg-slate-950 flex flex-col items-center justify-center p-8 overflow-hidden">
       <div className="flex flex-col items-center text-center space-y-4 max-w-md z-10">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-lg shadow-blue-500/10">
-          <Globe className="h-8 w-8 animate-spin text-blue-400" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-sm">
+          <Globe className="h-7 w-7 animate-spin" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-foreground">
-            Loading Interactive World Map...
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+            {t.centerpiece.loadingMap}
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">
-            Streaming TopoJSON 110m vectors and authentic World Bank demographic indicators.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {t.centerpiece.loadingMapSub}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-mono text-blue-400/80">
+        <div className="flex items-center gap-2 text-xs font-medium text-blue-700 dark:text-blue-300">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          <span>Synchronizing 200+ territories</span>
+          <span>{t.centerpiece.syncTerritories}</span>
         </div>
       </div>
     </div>
