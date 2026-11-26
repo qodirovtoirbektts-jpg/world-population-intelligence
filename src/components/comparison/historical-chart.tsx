@@ -104,7 +104,7 @@ export function HistoricalChart({ profiles, historical }: HistoricalChartProps) 
     if (!active || !payload || !payload.length) return null;
 
     return (
-      <div className="rounded-xl border border-blue-200 dark:border-slate-700 bg-white/98 dark:bg-slate-900/95 p-3.5 shadow-xl text-xs space-y-2 min-w-[210px]">
+      <div className="rounded-xl border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3.5 shadow-xl text-xs space-y-2 min-w-[210px]">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
           <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
             {t.historical.yearLabel}: {label}

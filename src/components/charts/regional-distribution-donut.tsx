@@ -58,7 +58,7 @@ export function RegionalDistributionDonut({ data }: RegionalDistributionDonutPro
     const regionName = getRegionName(item);
 
     return (
-      <div className="rounded-xl border border-blue-200 dark:border-slate-700 bg-white/98 dark:bg-slate-900/95 p-3 shadow-xl text-xs space-y-1.5 min-w-[190px]">
+      <div className="rounded-xl border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 shadow-xl text-xs space-y-1.5 min-w-[190px]">
         <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
           <span>{regionName}</span>

@@ -74,7 +74,7 @@ export function PopulationRankingBar({
     const item = payload[0].payload;
 
     return (
-      <div className="rounded-xl border border-blue-200 dark:border-slate-700 bg-white/98 dark:bg-slate-900/95 p-3 shadow-xl text-xs space-y-1 min-w-[175px]">
+      <div className="rounded-xl border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 shadow-xl text-xs space-y-1 min-w-[175px]">
         <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
           <span>{item.flag}</span>
           <span>{item.name}</span>

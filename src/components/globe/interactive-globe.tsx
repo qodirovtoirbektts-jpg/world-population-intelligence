@@ -7,6 +7,7 @@ import {
   Geography,
   Sphere,
   Graticule,
+  Marker,
 } from "react-simple-maps";
 import { CountryMapData, MapMetricType, MapTooltipState } from "@/types/map";
 import { resolveGeoToIso3 } from "@/lib/country-codes";
@@ -90,6 +91,19 @@ export function getCartographicFillColor(
 function shortestLonDelta(fromLon: number, toLon: number): number {
   let diff = ((toLon - fromLon + 540) % 360) - 180;
   return diff;
+}
+
+function cosAngularDist(
+  lon1: number,
+  lat1: number,
+  lon2: number,
+  lat2: number
+): number {
+  const rad = Math.PI / 180;
+  return (
+    Math.sin(lat1 * rad) * Math.sin(lat2 * rad) +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lon1 - lon2) * rad)
+  );
 }
 
 export const InteractiveGlobe = memo(function InteractiveGlobe({
@@ -424,6 +438,97 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
 
   const zoomMultiplier = (scale / BASE_SCALE).toFixed(1);
 
+  const selectedSummary = useMemo(() => {
+    if (!selectedIso3) return null;
+    const data = dataset[selectedIso3];
+    const target = geoTargets[selectedIso3];
+    const name = getLocalizedCountryName(
+      selectedIso3,
+      data?.name || target?.name || selectedIso3,
+      language
+    );
+    return {
+      iso3: selectedIso3,
+      name,
+      value: data?.formattedValue || null,
+      coordinates: target?.coordinates || null,
+    };
+  }, [selectedIso3, dataset, geoTargets, language]);
+
+  // Visible front-hemisphere country labels & selected pin marker
+  const { selectedMarkerVisible, visibleCountryLabels } = useMemo(() => {
+    const camLon = -rotation[0];
+    const camLat = -rotation[1];
+
+    const selectedTarget = selectedIso3 ? geoTargets[selectedIso3] : null;
+    const selectedVisible =
+      Boolean(selectedTarget) &&
+      cosAngularDist(
+        selectedTarget!.coordinates[0],
+        selectedTarget!.coordinates[1],
+        camLon,
+        camLat
+      ) > 0.08;
+
+    const labels: Array<{
+      iso3: string;
+      name: string;
+      coordinates: [number, number];
+    }> = [];
+
+    // Show neighboring country names on the globe when zoomed >= 1.6x
+    if (scale >= 350) {
+      const minSepCos = Math.cos(((Math.max(4, 20 / (scale / BASE_SCALE))) * Math.PI) / 180);
+      const candidates = Object.values(geoTargets)
+        .filter((item) => {
+          if (item.iso3 === selectedIso3) return false;
+          return cosAngularDist(item.coordinates[0], item.coordinates[1], camLon, camLat) > 0.34;
+        })
+        .sort((a, b) => {
+          const valA = dataset[a.iso3]?.value ?? 0;
+          const valB = dataset[b.iso3]?.value ?? 0;
+          return valB - valA;
+        });
+
+      for (const c of candidates) {
+        if (labels.length >= 16) break;
+        const tooCloseToSelected =
+          selectedVisible &&
+          selectedTarget &&
+          cosAngularDist(
+            c.coordinates[0],
+            c.coordinates[1],
+            selectedTarget.coordinates[0],
+            selectedTarget.coordinates[1]
+          ) > minSepCos;
+        if (tooCloseToSelected) continue;
+
+        const collides = labels.some(
+          (existing) =>
+            cosAngularDist(
+              c.coordinates[0],
+              c.coordinates[1],
+              existing.coordinates[0],
+              existing.coordinates[1]
+            ) > minSepCos
+        );
+        if (collides) continue;
+
+        const rawName = dataset[c.iso3]?.name || c.name;
+        labels.push({
+          iso3: c.iso3,
+          name: getLocalizedCountryName(c.iso3, rawName, language),
+          coordinates: c.coordinates,
+        });
+      }
+    }
+
+    return {
+      selectedMarkerVisible: selectedVisible,
+      visibleCountryLabels: labels,
+    };
+  }, [rotation, scale, selectedIso3, geoTargets, dataset, language]);
+
   const regionalPills = useMemo(
     () => [
       {
@@ -507,7 +612,7 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
           </div>
 
           {jumpOpen && searchableCountries.length > 0 && (
-            <div className="absolute left-0 right-0 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-blue-100 dark:border-slate-700 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl shadow-xl p-1 space-y-0.5 z-40">
+            <div className="absolute left-0 right-0 mt-1.5 max-h-64 overflow-y-auto rounded-xl border-2 border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-1.5 space-y-0.5 z-40">
               {searchableCountries.map((c) => {
                 const metricVal = dataset[c.iso3]?.formattedValue;
                 return (
@@ -522,15 +627,15 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
                     className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left text-xs hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800 shrink-0">
+                      <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#1D4ED8] text-white shrink-0">
                         {c.iso3}
                       </span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                      <span className="font-semibold text-slate-900 dark:text-white truncate">
                         {c.displayName}
                       </span>
                     </div>
                     {metricVal && (
-                      <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 shrink-0 pl-2">
+                      <span className="font-mono text-[11px] font-bold text-[#0F295C] dark:text-blue-300 shrink-0 pl-2">
                         {metricVal}
                       </span>
                     )}
@@ -542,8 +647,8 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
         </div>
 
         {/* Right Hints & Quick Region Pills (Desktop) */}
-        <div className="hidden md:flex items-center gap-1.5 pointer-events-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-blue-100 dark:border-slate-700 px-2.5 py-1.5 rounded-xl shadow-sm">
-          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 pr-1">
+        <div className="hidden md:flex items-center gap-1.5 pointer-events-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-200 dark:border-slate-700 px-2.5 py-1.5 rounded-xl shadow-sm">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 pr-1">
             {t.centerpiece.regionJumpLabel}
           </span>
           {regionalPills.map((reg) => (
@@ -551,12 +656,30 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
               key={reg.label}
               type="button"
               onClick={() => flyTo(reg.coords, reg.scale)}
-              className="px-2 py-0.5 rounded-lg text-[11px] font-medium text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 transition-colors"
+              className="px-2 py-0.5 rounded-lg text-[11px] font-semibold text-slate-800 dark:text-slate-100 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 transition-colors"
             >
               {reg.label}
             </button>
           ))}
         </div>
+
+        {/* Selected Country Quick Readout Pill */}
+        {selectedSummary && (
+          <div className="flex items-center gap-2 rounded-xl bg-[#0F295C] text-white px-3 py-1.5 shadow-md border border-white/25 text-xs pointer-events-none">
+            <span className="h-2 w-2 rounded-full bg-sky-400 shrink-0" />
+            <span className="font-bold text-white truncate max-w-[140px]">
+              {selectedSummary.name}
+            </span>
+            <span className="font-mono text-[10px] font-bold bg-white text-[#0F295C] px-1.5 py-0.5 rounded">
+              {selectedSummary.iso3}
+            </span>
+            {selectedSummary.value && (
+              <span className="font-bold text-sky-200 tabular-nums">
+                • {selectedSummary.value}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Bottom Interactive Control Bar */}
@@ -813,6 +936,71 @@ export const InteractiveGlobe = memo(function InteractiveGlobe({
             strokeWidth={1.5}
             className="pointer-events-none"
           />
+
+          {/* Neighboring Country Labels on Zoom */}
+          {visibleCountryLabels.map((lbl) => (
+            <Marker key={`lbl-${lbl.iso3}`} coordinates={lbl.coordinates}>
+              <text
+                textAnchor="middle"
+                y={3}
+                className="pointer-events-none select-none"
+                style={{
+                  fontFamily: "var(--font-sans), sans-serif",
+                  fontSize: scale >= 700 ? "11px" : "9.5px",
+                  fontWeight: 700,
+                  fill: "#0F295C",
+                  paintOrder: "stroke",
+                  stroke: "#FFFFFF",
+                  strokeWidth: "3.5px",
+                  strokeLinejoin: "round",
+                }}
+              >
+                {lbl.name}
+              </text>
+            </Marker>
+          ))}
+
+          {/* Selected Country Pin & Vivid High-Contrast Label Pill */}
+          {selectedMarkerVisible && selectedSummary?.coordinates && (
+            <Marker coordinates={selectedSummary.coordinates}>
+              <g className="pointer-events-none select-none">
+                <circle r={7} fill="#3B82F6" fillOpacity={0.28} />
+                <circle r={4.2} fill="#FFFFFF" stroke="#0F295C" strokeWidth={2.2} />
+                {(() => {
+                  const pillText = selectedSummary.value
+                    ? `${selectedSummary.name} · ${selectedSummary.value}`
+                    : selectedSummary.name;
+                  const pillW = Math.max(82, pillText.length * 6.8 + 18);
+                  return (
+                    <g transform="translate(0, -14)">
+                      <rect
+                        x={-pillW / 2}
+                        y={-22}
+                        width={pillW}
+                        height={22}
+                        rx={7}
+                        fill="#0F295C"
+                        stroke="#FFFFFF"
+                        strokeWidth={1.5}
+                      />
+                      <text
+                        textAnchor="middle"
+                        y={-7.5}
+                        style={{
+                          fontFamily: "var(--font-sans), sans-serif",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          fill: "#FFFFFF",
+                        }}
+                      >
+                        {pillText}
+                      </text>
+                    </g>
+                  );
+                })()}
+              </g>
+            </Marker>
+          )}
         </ComposableMap>
       </div>
     </div>

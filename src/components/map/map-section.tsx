@@ -142,6 +142,14 @@ export function MapSection() {
   const mobileDisplayName = selectedProfile
     ? getLocalizedCountryName(selectedProfile.iso3, selectedProfile.name, language)
     : t.countryPanel.mobileTitle;
+  const mobileMetricVal =
+    metric === "SP.POP.TOTL"
+      ? selectedProfile?.population?.value
+      : metric === "EN.POP.DNST"
+      ? selectedProfile?.density?.value
+      : metric === "SP.POP.GROW"
+      ? selectedProfile?.growthRate?.value
+      : selectedProfile?.urbanShare?.value;
 
   return (
     <section id="map-section" className="space-y-5 scroll-mt-20">
@@ -291,18 +299,28 @@ export function MapSection() {
             <button
               type="button"
               onClick={() => setMobilePanelExpanded((v) => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-blue-50/80 dark:bg-slate-800 border border-blue-200/80 dark:border-slate-700 text-left mb-3"
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#0F295C] text-white shadow-sm text-left mb-3"
             >
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-blue-700" />
-                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                  {t.countryPanel.mobileTitle}: {mobileDisplayName}
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="h-2.5 w-2.5 rounded-full bg-sky-400 shrink-0" />
+                <span className="text-xs font-bold text-white truncate">
+                  {mobileDisplayName}
                 </span>
+                {selectedIso3 && (
+                  <span className="font-mono text-[10px] font-bold bg-white text-[#0F295C] px-1.5 py-0.5 rounded shrink-0">
+                    {selectedIso3}
+                  </span>
+                )}
+                {mobileMetricVal && (
+                  <span className="text-xs font-semibold text-sky-200 tabular-nums shrink-0">
+                    • {mobileMetricVal}
+                  </span>
+                )}
               </div>
               {mobilePanelExpanded ? (
-                <ChevronUp className="h-4 w-4 text-blue-700" />
+                <ChevronUp className="h-4 w-4 text-sky-300 shrink-0" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-blue-700" />
+                <ChevronDown className="h-4 w-4 text-sky-300 shrink-0" />
               )}
             </button>
             {mobilePanelExpanded && (
